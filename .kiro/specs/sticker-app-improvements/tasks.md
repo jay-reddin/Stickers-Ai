@@ -52,9 +52,19 @@
     - Ensure proper cleanup of event listeners
     - _Requirements: 2.2, 2.3_
 
-- [ ] 4. Convert expressions layout to carousel format
+- [x] 4. Convert expressions layout to carousel format
 
-  - [ ] 4.1 Replace expressions grid with carousel implementation
+
+
+
+
+
+  - [x] 4.1 Replace expressions grid with carousel implementation
+
+
+
+
+
 
     - Modify expressions section to use new Carousel component
     - Maintain existing selection functionality within carousel format
@@ -62,13 +72,18 @@
     - Ensure custom expressions work properly in carousel format
     - _Requirements: 2.1, 2.4, 2.5_
 
-  - [ ] 4.2 Test expressions carousel functionality
+  - [x] 4.2 Test expressions carousel functionality
+
+
     - Verify selection state persistence during scrolling
     - Test navigation arrows with various numbers of expressions
     - Ensure responsive behavior on mobile and desktop devices
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 5. Implement attribution footer component
+- [-] 5. Implement attribution footer component
+
+
+
 
   - [ ] 5.1 Create Footer component with proper links
 

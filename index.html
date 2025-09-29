@@ -1980,12 +1980,15 @@
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                    {allEmotions.map((emotion) => (
-                      <div key={emotion.key} className="relative">
+                  <Carousel
+                    items={allEmotions}
+                    selectedItem={null}
+                    onItemSelect={null}
+                    renderItem={(emotion, selectedItem, onItemSelect) => (
+                      <div className="relative">
                         <button
                           onClick={() => toggleExpression(emotion.key)}
-                          className={`w-full p-3 border-4 border-[#242424] rounded-lg font-bold transition-transform hover:scale-105 ${
+                          className={`w-32 h-32 p-3 border-4 border-[#242424] rounded-lg font-bold transition-transform hover:scale-105 ${
                             selectedExpressions.has(emotion.key)
                               ? "bg-[#70d6ff] text-[#242424]"
                               : "bg-[#ffffff] text-[#242424]"
@@ -2017,19 +2020,12 @@
                           </button>
                         )}
                       </div>
-                    ))}
-
-                    {/* Add Expression Card */}
-                    <button
-                      onClick={() => setShowAddExpressionModal(true)}
-                      className="p-3 border-4 border-[#242424] border-dashed rounded-lg bg-[#ffffff] opacity-70 hover:opacity-100 hover:scale-105 transition-all font-bold text-[#242424]"
-                    >
-                      <div className="text-2xl mb-1">
-                        <PlusIcon className="w-8 h-8 mx-auto" />
-                      </div>
-                      <div className="text-sm">Add Expression</div>
-                    </button>
-                  </div>
+                    )}
+                    containerHeight="150px"
+                    showAddButton={true}
+                    onAddClick={() => setShowAddExpressionModal(true)}
+                    className="mb-4"
+                  />
                 </div>
 
                 {/* Style Selection */}
