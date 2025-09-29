@@ -288,6 +288,33 @@
         </svg>
       );
 
+      // --- Footer Component ---
+      const Footer = () => (
+        <footer className="mt-8 pt-6 border-t-4 border-[#242424] text-center">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-2 text-[#242424] text-sm">
+            <span>Created by</span>
+            <a 
+              href="https://jayreddin.github.io" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-bold hover:underline text-[#70d6ff]"
+            >
+              Jamie Reddin
+            </a>
+            <span>using</span>
+            <a 
+              href="https://puter.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-bold hover:underline text-[#70d6ff]"
+            >
+              Puter.com
+            </a>
+            <span className="text-[#242424] opacity-70">| Version 1.0.2</span>
+          </div>
+        </footer>
+      );
+
       const ProgressCircleIcon = ({ className, progress = 0 }) => (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -2536,6 +2563,9 @@
                 onAddExpression={handleAddCustomExpression}
                 database={database}
               />
+
+              {/* Footer */}
+              <Footer />
             </div>
           </div>
         );
