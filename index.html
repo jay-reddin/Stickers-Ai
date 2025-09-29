@@ -288,6 +288,38 @@
         </svg>
       );
 
+      const ProgressCircleIcon = ({ className, progress = 0 }) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          className={className}
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            opacity="0.3"
+          />
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeDasharray={`${2 * Math.PI * 10}`}
+            strokeDashoffset={`${2 * Math.PI * 10 * (1 - progress / 100)}`}
+            strokeLinecap="round"
+            transform="rotate(-90 12 12)"
+          />
+        </svg>
+      );
+
       // --- Add Style Modal Component ---
       const AddStyleModal = ({ show, onClose, onAddStyle, database }) => {
         const [styleName, setStyleName] = useState("");
@@ -875,6 +907,8 @@
         const [loadingMessage, setLoadingMessage] = useState("");
         const [error, setError] = useState(null);
         const [isZipping, setIsZipping] = useState(false);
+        const [downloadProgress, setDownloadProgress] = useState(0);
+        const [downloadCancelled, setDownloadCancelled] = useState(false);
         const [styleOptions, setStyleOptions] = useState([]);
         const [stylesWithRotation, setStylesWithRotation] = useState([]);
         const [allEmotions, setAllEmotions] = useState(initialEmotions);
@@ -1554,10 +1588,10 @@
         );
 
         const handleDownloadAll = useCallback(async () => {
-          // Validation
-          if (typeof window.JSZip === "undefined") {
+          // Comprehensive error checking for JSZip availability
+          if (!window.JSZip) {
             setError(
-              "Could not download all stickers. The required library is not available."
+              "Download functionality is currently unavailable. The required JSZip library could not be loaded. Please refresh the page and try again."
             );
             return;
           }
@@ -1565,41 +1599,98 @@
           const stickersToDownload = stickerDocs.filter(
             (doc) => doc._files?.generated
           );
+
           if (stickersToDownload.length === 0) {
-            setError("No stickers available for download.");
+            setError("No stickers are available for download. Please generate some stickers first.");
             return;
           }
 
           setIsZipping(true);
           setError(null);
+          setDownloadProgress(0);
+          setDownloadCancelled(false);
+          setLoadingMessage("Initializing download...");
 
           try {
             const zip = new window.JSZip();
             const stickerFolder = zip.folder("AI-Stickers");
+            const totalStickers = stickersToDownload.length;
+            let processedStickers = 0;
+            let skippedStickers = 0;
 
-            // Process each sticker
-            for (const stickerDoc of stickersToDownload) {
-              if (stickerDoc._files?.generated) {
-                const file = await stickerDoc._files.generated.file();
-                const arrayBuffer = await file.arrayBuffer();
-                const fileName = `sticker-${stickerDoc.emotion
-                  .toLowerCase()
-                  .replace(/\s+/g, "-")}-${stickerDoc.style || "default"}.png`;
-                stickerFolder.file(fileName, arrayBuffer);
+            // Process each sticker with detailed progress tracking
+            for (const [index, stickerDoc] of stickersToDownload.entries()) {
+              // Check for cancellation
+              if (downloadCancelled) {
+                setError("Download was cancelled by user.");
+                return;
+              }
+
+              const currentProgress = Math.round((index / totalStickers) * 80); // 80% for processing
+              setDownloadProgress(currentProgress);
+              setLoadingMessage(
+                `Processing sticker ${index + 1} of ${totalStickers}: ${stickerDoc.emotion} (${stickerDoc.style})`
+              );
+
+              try {
+                if (stickerDoc._files?.generated) {
+                  const file = await stickerDoc._files.generated.file();
+                  const arrayBuffer = await file.arrayBuffer();
+                  
+                  // Enhanced file naming with better sanitization
+                  const emotionName = stickerDoc.emotion
+                    ?.toLowerCase()
+                    .replace(/[^a-z0-9]/g, "-")
+                    .replace(/-+/g, "-")
+                    .replace(/^-|-$/g, "") || "unknown";
+                  const styleName = stickerDoc.style
+                    ?.toLowerCase()
+                    .replace(/[^a-z0-9]/g, "-")
+                    .replace(/-+/g, "-")
+                    .replace(/^-|-$/g, "") || "default";
+                  
+                  const fileName = `sticker-${emotionName}-${styleName}.png`;
+                  stickerFolder.file(fileName, arrayBuffer);
+                  processedStickers++;
+                } else {
+                  console.warn(`Skipping sticker ${index + 1}: No generated file found`);
+                  skippedStickers++;
+                }
+              } catch (fileError) {
+                console.error(`Error processing sticker ${index + 1}:`, fileError);
+                skippedStickers++;
+                // Continue processing other stickers instead of failing completely
               }
             }
 
-            // Generate ZIP with compression
+            // Check if we have any stickers to download
+            if (processedStickers === 0) {
+              setError("No valid stickers could be processed for download. Please try regenerating your stickers.");
+              return;
+            }
+
+            setDownloadProgress(85);
+            setLoadingMessage("Creating download package...");
+
+            // Generate ZIP with compression and progress callback
             const zipBlob = await zip.generateAsync({
               type: "blob",
               compression: "DEFLATE",
               compressionOptions: { level: 6 },
+            }, (metadata) => {
+              // Update progress during ZIP generation (85-95%)
+              const zipProgress = 85 + Math.round((metadata.percent || 0) * 0.1);
+              setDownloadProgress(Math.min(zipProgress, 95));
             });
 
-            // Create download with timestamp
+            setDownloadProgress(98);
+            setLoadingMessage("Preparing download...");
+
+            // Include timestamp in ZIP file name for better organization
             const timestamp = new Date().toISOString().slice(0, 10);
             const fileName = `AI-Stickers-${timestamp}.zip`;
 
+            // Create and trigger download
             const link = document.createElement("a");
             link.href = URL.createObjectURL(zipBlob);
             link.download = fileName;
@@ -1607,16 +1698,49 @@
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(link.href);
+
+            setDownloadProgress(100);
+            
+            // Enhanced success message with details
+            const successMessage = skippedStickers > 0 
+              ? `Download complete! ${processedStickers} stickers downloaded successfully. ${skippedStickers} stickers were skipped due to errors.`
+              : `Download complete! All ${processedStickers} stickers downloaded successfully.`;
+            
+            setLoadingMessage(successMessage);
+
+            // Clear success message after a longer delay to let users read it
+            setTimeout(() => {
+              setLoadingMessage("");
+              setDownloadProgress(0);
+            }, 4000);
           } catch (err) {
-            handleError(
-              err,
-              "Sorry, there was an error creating the zip file.",
-              "downloadAll"
-            );
+            console.error("Download error:", err);
+            
+            // Enhanced error messages based on error type
+            let errorMessage = "Failed to create download package. Please try again.";
+            
+            if (err.name === "QuotaExceededError" || err.message.includes("quota")) {
+              errorMessage = "Download failed due to insufficient storage space. Please free up some space and try again.";
+            } else if (err.message.includes("network") || err.message.includes("fetch")) {
+              errorMessage = "Download failed due to network issues. Please check your connection and try again.";
+            } else if (err.message.includes("memory")) {
+              errorMessage = "Download failed due to memory limitations. Try downloading fewer stickers at once.";
+            }
+            
+            setError(errorMessage);
           } finally {
             setIsZipping(false);
+            // Don't reset progress immediately on error so user can see what happened
+            if (!error) {
+              setTimeout(() => setDownloadProgress(0), 1000);
+            }
           }
-        }, [stickerDocs, handleError]);
+        }, [stickerDocs, setError, setLoadingMessage, setIsZipping, setDownloadProgress, downloadCancelled]);
+
+        const handleCancelDownload = useCallback(() => {
+          setDownloadCancelled(true);
+          setLoadingMessage("Cancelling download...");
+        }, []);
 
         return (
           <div className="bg-gradient-to-br from-[#70d6ff] via-[#e9ff70] to-[#ffd670] min-h-screen p-4">
@@ -2056,21 +2180,157 @@
                         <div className="mt-8 text-center">
                           <button
                             onClick={handleDownloadAll}
-                            disabled={isZipping}
-                            className="bg-[#ffffff] text-[#242424] border-4 border-[#242424] font-bold py-3 px-8 rounded-lg hover:translate-x-1 hover:translate-y-1 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center mx-auto"
+                            disabled={
+                              isZipping ||
+                              stickerDocs.filter((doc) => doc._files?.generated)
+                                .length === 0
+                            }
+                            className={`
+                              font-bold py-3 px-8 rounded-lg transition-all duration-200 flex items-center justify-center mx-auto min-w-[200px]
+                              ${isZipping 
+                                ? 'bg-[#e9ff70] text-[#242424] border-4 border-[#242424] cursor-not-allowed' 
+                                : stickerDocs.filter((doc) => doc._files?.generated).length === 0
+                                  ? 'bg-[#f0f0f0] text-[#888888] border-4 border-[#cccccc] cursor-not-allowed opacity-60'
+                                  : 'bg-[#ffffff] text-[#242424] border-4 border-[#242424] hover:translate-x-1 hover:translate-y-1 hover:bg-[#f8f8f8]'
+                              }
+                            `}
                           >
                             {isZipping ? (
-                              <>
-                                <LoaderCircle className="animate-spin w-6 h-6 mr-3" />
-                                Zipping...
-                              </>
+                              <div className="flex items-center">
+                                <ProgressCircleIcon 
+                                  className="w-5 h-5 mr-3 text-[#242424]" 
+                                  progress={downloadProgress} 
+                                />
+                                <span className="text-sm">
+                                  {downloadProgress < 80 ? 'Processing...' : 
+                                   downloadProgress < 95 ? 'Packaging...' : 
+                                   downloadProgress < 100 ? 'Finalizing...' : 'Complete!'}
+                                </span>
+                              </div>
+                            ) : stickerDocs.filter((doc) => doc._files?.generated).length === 0 ? (
+                              <div className="flex items-center">
+                                <DownloadIcon className="w-5 h-5 mr-2 opacity-50" />
+                                <span>No stickers to download</span>
+                              </div>
                             ) : (
-                              <>
-                                <DownloadIcon className="w-6 h-6 mr-2" />
-                                Download all
-                              </>
+                              <div className="flex items-center">
+                                <DownloadIcon className="w-5 h-5 mr-2" />
+                                <span>
+                                  Download all ({stickerDocs.filter((doc) => doc._files?.generated).length} stickers)
+                                </span>
+                              </div>
                             )}
                           </button>
+
+                          {/* Helpful message when no stickers are available */}
+                          {!isZipping && stickerDocs.filter((doc) => doc._files?.generated).length === 0 && (
+                            <div className="mt-4 p-3 bg-[#f8f9fa] border-2 border-[#e9ecef] rounded-lg text-[#6c757d] max-w-md mx-auto text-center">
+                              <div className="text-sm">
+                                <div className="font-medium mb-1">💡 No stickers ready for download</div>
+                                <div className="text-xs">
+                                  Upload a photo and generate some stickers first, then you'll be able to download them all as a ZIP file.
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Enhanced progress indication with progress bar and detailed messaging */}
+                          {isZipping && (
+                            <div className="mt-4 p-4 bg-[#e9ff70] border-4 border-[#242424] rounded-lg text-[#242424] max-w-lg mx-auto">
+                              <div className="space-y-3">
+                                {/* Progress bar */}
+                                <div className="w-full bg-[#ffffff] border-2 border-[#242424] rounded-full h-3 overflow-hidden">
+                                  <div 
+                                    className="h-full bg-[#70d6ff] border-r-2 border-[#242424] transition-all duration-300 ease-out"
+                                    style={{ width: `${downloadProgress}%` }}
+                                  ></div>
+                                </div>
+                                
+                                {/* Progress percentage and status */}
+                                <div className="flex items-center justify-between text-sm">
+                                  <div className="flex items-center">
+                                    <LoaderCircle className="animate-spin w-4 h-4 mr-2" />
+                                    <span className="font-bold">
+                                      {downloadProgress}% Complete
+                                    </span>
+                                  </div>
+                                  <span className="text-xs opacity-75">
+                                    {downloadProgress < 80 ? 'Processing' : 
+                                     downloadProgress < 95 ? 'Packaging' : 
+                                     downloadProgress < 100 ? 'Finalizing' : 'Complete'}
+                                  </span>
+                                </div>
+                                
+                                {/* Detailed status message */}
+                                {loadingMessage && (
+                                  <div className="text-center">
+                                    <span className="text-sm font-medium">
+                                      {loadingMessage}
+                                    </span>
+                                  </div>
+                                )}
+                                
+                                {/* Cancel button for long downloads */}
+                                {downloadProgress > 0 && downloadProgress < 100 && !downloadCancelled && (
+                                  <div className="text-center mt-2">
+                                    <button
+                                      onClick={handleCancelDownload}
+                                      className="text-xs text-[#242424] opacity-75 hover:opacity-100 underline transition-opacity"
+                                    >
+                                      Cancel Download
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Enhanced error messaging for various failure scenarios */}
+                          {error && (
+                            <div className="mt-4 p-4 bg-[#ff70a6] border-4 border-[#242424] rounded-lg text-[#242424] max-w-lg mx-auto">
+                              <div className="space-y-2">
+                                <div className="flex items-start">
+                                  <AlertTriangle className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" />
+                                  <div className="flex-1">
+                                    <div className="font-bold text-sm mb-1">Download Failed</div>
+                                    <div className="text-sm leading-relaxed">
+                                      {error}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {/* Retry suggestion */}
+                                <div className="mt-3 pt-2 border-t-2 border-[#242424] text-xs opacity-75">
+                                  💡 Tip: If the problem persists, try refreshing the page or downloading fewer stickers at once.
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Enhanced success message with detailed feedback */}
+                          {!isZipping &&
+                            loadingMessage &&
+                            loadingMessage.includes("complete") && (
+                              <div className="mt-4 p-4 bg-[#70d6ff] border-4 border-[#242424] rounded-lg text-[#242424] max-w-lg mx-auto">
+                                <div className="space-y-2">
+                                  <div className="flex items-start">
+                                    <DownloadIcon className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0" />
+                                    <div className="flex-1">
+                                      <div className="font-bold text-sm mb-1">Success!</div>
+                                      <div className="text-sm leading-relaxed">
+                                        {loadingMessage}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Additional success info */}
+                                  <div className="mt-3 pt-2 border-t-2 border-[#242424] text-xs opacity-75">
+                                    📁 Your stickers have been saved to your Downloads folder
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
                           {isIOS && (
                             <div className="mt-4 p-3 bg-[#ffffff] border-2 border-[#242424] rounded-lg text-[#242424] max-w-md mx-auto">
                               <p className="font-bold text-sm">
