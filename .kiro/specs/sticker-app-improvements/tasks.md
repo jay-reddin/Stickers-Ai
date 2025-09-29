@@ -24,11 +24,16 @@
     - Improve error messaging for various failure scenarios
     - _Requirements: 1.3, 1.4_
 
-- [-] 3. Create reusable Carousel component
+- [x] 3. Create reusable Carousel component
 
 
 
-  - [-] 3.1 Build base Carousel component with navigation
+
+
+
+
+  - [x] 3.1 Build base Carousel component with navigation
+
 
 
     - Create reusable carousel component that accepts items and render functions
@@ -38,7 +43,10 @@
 
     - _Requirements: 2.1, 2.2, 2.3_
 
-  - [ ] 3.2 Implement scroll detection and arrow visibility
+  - [x] 3.2 Implement scroll detection and arrow visibility
+
+
+
     - Add scroll event listeners to detect when arrows should be shown/hidden
     - Implement smooth scrolling to specific items when arrows are clicked
     - Ensure proper cleanup of event listeners

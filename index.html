@@ -320,6 +320,142 @@
         </svg>
       );
 
+      // --- Carousel Component ---
+      const Carousel = ({ 
+        items, 
+        selectedItem, 
+        onItemSelect, 
+        renderItem, 
+        containerHeight = "300px",
+        showAddButton = false,
+        onAddClick = null,
+        className = ""
+      }) => {
+        const scrollContainerRef = useRef(null);
+        const [showLeftArrow, setShowLeftArrow] = useState(false);
+        const [showRightArrow, setShowRightArrow] = useState(false);
+
+        // Check scroll position and update arrow visibility
+        const checkScrollPosition = useCallback(() => {
+          const container = scrollContainerRef.current;
+          if (!container) return;
+
+          const { scrollLeft, scrollWidth, clientWidth } = container;
+          setShowLeftArrow(scrollLeft > 0);
+          setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 1);
+        }, []);
+
+        // Set up scroll event listener
+        useEffect(() => {
+          const container = scrollContainerRef.current;
+          if (!container) return;
+
+          // Initial check
+          checkScrollPosition();
+
+          // Add scroll listener
+          container.addEventListener('scroll', checkScrollPosition);
+          
+          // Add resize listener to handle responsive changes
+          const handleResize = () => {
+            setTimeout(checkScrollPosition, 100);
+          };
+          window.addEventListener('resize', handleResize);
+
+          return () => {
+            container.removeEventListener('scroll', checkScrollPosition);
+            window.removeEventListener('resize', handleResize);
+          };
+        }, [checkScrollPosition, items]);
+
+        // Smooth scroll to left
+        const scrollLeft = useCallback(() => {
+          const container = scrollContainerRef.current;
+          if (!container) return;
+
+          const scrollAmount = container.clientWidth * 0.8;
+          container.scrollBy({
+            left: -scrollAmount,
+            behavior: 'smooth'
+          });
+        }, []);
+
+        // Smooth scroll to right
+        const scrollRight = useCallback(() => {
+          const container = scrollContainerRef.current;
+          if (!container) return;
+
+          const scrollAmount = container.clientWidth * 0.8;
+          container.scrollBy({
+            left: scrollAmount,
+            behavior: 'smooth'
+          });
+        }, []);
+
+        return (
+          <div className={`relative ${className}`}>
+            {/* Left Arrow */}
+            {showLeftArrow && (
+              <button
+                onClick={scrollLeft}
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-[#ffffff] border-4 border-[#242424] rounded-full p-2 shadow-lg hover:translate-x-1 hover:translate-y-1 transition-transform"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="w-6 h-6 text-[#242424]" />
+              </button>
+            )}
+
+            {/* Right Arrow */}
+            {showRightArrow && (
+              <button
+                onClick={scrollRight}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-[#ffffff] border-4 border-[#242424] rounded-full p-2 shadow-lg hover:translate-x-1 hover:translate-y-1 transition-transform"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="w-6 h-6 text-[#242424]" />
+              </button>
+            )}
+
+            {/* Scrollable Container */}
+            <div
+              ref={scrollContainerRef}
+              className="flex gap-4 overflow-x-auto scrollbar-hide px-4 py-2"
+              style={{ 
+                height: containerHeight,
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+              }}
+            >
+              {items.map((item, index) => (
+                <div key={item.id || item.key || index} className="flex-shrink-0">
+                  {renderItem(item, selectedItem, onItemSelect)}
+                </div>
+              ))}
+              
+              {/* Add Button */}
+              {showAddButton && onAddClick && (
+                <div className="flex-shrink-0">
+                  <button
+                    onClick={onAddClick}
+                    className="w-32 h-32 bg-[#e9ff70] border-4 border-[#242424] rounded-lg font-bold text-[#242424] hover:translate-x-1 hover:translate-y-1 transition-transform flex flex-col items-center justify-center"
+                  >
+                    <PlusIcon className="w-8 h-8 mb-2" />
+                    <span className="text-sm">Add New</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Custom scrollbar hiding styles */}
+            <style jsx>{`
+              .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
+          </div>
+        );
+      };
+
       // --- Add Style Modal Component ---
       const AddStyleModal = ({ show, onClose, onAddStyle, database }) => {
         const [styleName, setStyleName] = useState("");
