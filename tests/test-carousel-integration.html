@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Carousel Implementation Integration Tests</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #70d6ff, #e9ff70, #ffd670);
+            min-height: 100vh;
+        }
+        .test-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border: 4px solid #242424;
+            border-radius: 12px;
+            padding: 24px;
+        }
+        .test-section {
+            margin-bottom: 24px;
+            padding: 16px;
+            border: 2px solid #242424;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .test-button {
+            background: #70d6ff;
+            color: #242424;
+            border: 3px solid #242424;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 4px;
+            transition: transform 0.1s;
+        }
+        .test-button:hover {
+            transform: translate(1px, 1px);
+        }
+        .test-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .info { color: #17a2b8; font-weight: bold; }
+        .warning { color: #ffc107; font-weight: bold; }
+        .result-box {
+            margin-top: 8px;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            background: #f1f3f4;
+            border: 1px solid #ddd;
+            white-space: pre-wrap;
+        }
+        
+        /* Carousel Styles */
+        .carousel-demo {
+            position: relative;
+            margin: 16px 0;
+            border: 3px solid #242424;
+            border-radius: 8px;
+            background: white;
+            overflow: hidden;
+        }
+        
+        .carousel-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 12px;
+            padding: 16px;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .carousel-container::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .expression-item {
+            flex-shrink: 0;
+            width: 100px;
+            height: 100px;
+            background: #e9ff70;
+            border: 3px solid #242424;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        
+        .expression-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .expression-item.selected {
+            background: #ff70a6;
+            transform: scale(1.05);
+        }
+        
+        .expression-emoji {
+            font-size: 32px;
+            margin-bottom: 4px;
+        }
+        
+        .expression-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: #242424;
+            text-align: center;
+        }
+        
+        .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            background: white;
+            border: 3px solid #242424;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .nav-arrow:hover {
+            transform: translateY(-50%) translate(1px, 1px);
+            background: #70d6ff;
+        }
+        
+        .nav-arrow.left {
+            left: 8px;
+        }
+        
+        .nav-arrow.right {
+            right: 8px;
+        }
+        
+        .add-expression-btn {
+            flex-shrink: 0;
+            width: 100px;
+            height: 100px;
+            background: #70d6ff;
+            border: 3px dashed #242424;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .add-expression-btn:hover {
+            background: #ffd670;
+            transform: translateY(-2px);
+        }
+        
+        .custom-expression {
+            background: #ffd670;
+            position: relative;
+        }
+        
+        .delete-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 24px;
+            height: 24px;
+            background: #ff70a6;
+            border: 2px solid #242424;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #242424;
+        }
+        
+        .delete-btn:hover {
+            background: #ff4757;
+            transform: scale(1.1);
+        }
+        
+        /* Responsive breakpoints */
+        @media (max-width: 768px) {
+            .expression-item {
+                width: 80px;
+                height: 80px;
+            }
+            .expression-emoji {
+                font-size: 24px;
+            }
+            .expression-name {
+                font-size: 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .expression-item {
+                width: 70px;
+                height: 70px;
+            }
+            .expression-emoji {
+                font-size: 20px;
+            }
+        }
+        
+        .viewport-simulator {
+            border: 2px solid #242424;
+            margin: 12px 0;
+            background: white;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 style="text-align: center; color: #242424; margin-bottom: 32px;">
+            🎠 Carousel Implementation Integration Tests
+        </h1>
+        
+        <!-- Test Status Dashboard -->
+        <div class="test-section">
+            <h2>📊 Carousel Test Dashboard</h2>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div>Total Tests: <span id="total-tests" class="info">0</span></div>
+                <div>Passed: <span id="passed-tests" class="success">0</span></div>
+                <div>Failed: <span id="failed-tests" class="error">0</span></div>
+                <div>Running: <span id="running-tests" class="warning">0</span></div>
+            </div>
+        </div>
+
+        <!-- Test 1: Horizontal Scrollable Display -->
+        <div class="test-section">
+            <h3>➡️ Test 1: Horizontal Scrollable Display</h3>
+            <p><strong>Requirement 2.1:</strong> Expressions displayed in horizontal scrollable carousel</p>
+            
+            <div class="carousel-demo" id="horizontal-demo">
+                <div class="carousel-container" id="horizontal-carousel">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <button class="test-button" onclick="testHorizontalDisplay()">
+                Test Horizontal Layout
+            </button>
+            <div id="horizontal-result" class="result-box" style="display: none;"></div>
+        </div>
+
+        <!-- Test 2: Navigation Arrows -->
+        <div class="test-section">
+            <h3>🏹 Test 2: Navigation Arrows</h3>
+            <p><strong>Requirement 2.2, 2.3:</strong> Navigation arrows appear and function correctly</p>
+            
+            <div class="carousel-demo" id="navigation-demo" style="position: relative;">
+                <button class="nav-arrow left" id="nav-left" style="display: none;">‹</button>
+                <button class="nav-arrow right" id="nav-right">›</button>
+                <div class="carousel-container" id="navigation-carousel">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <button class="test-button" onclick="testNavigationArrows()">
+                Test Navigation Arrows
+            </button>
+            <div id="navigation-result" class="result-box" style="display: none;"></div>
+        </div>
+
+        <!-- Test 3: Responsive Behavior -->
+        <div class="test-section">
+            <h3>📱 Test 3: Responsive Behavior</h3>
+            <p><strong>Requirement 5.3:</strong> Carousel works on different screen sizes</p>
+            
+            <div style="display: flex; gap: 12px; margin: 16px 0;">
+                <button class="test-button" onclick="simulateViewport(320, 'Mobile')">Mobile (320px)</button>
+                <button class="test-button" onclick="simulateViewport(768, 'Tablet')">Tablet (768px)</button>
+                <button class="test-button" onclick="simulateViewport(1200, 'Desktop')">Desktop (1200px)</button>
+            </div>
+            
+            <div class="viewport-simulator" id="responsive-demo" style="width: 100%;">
+                <div class="carousel-container" id="responsive-carousel">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <button class="test-button" onclick="testResponsiveBehavior()">
+                Test All Viewports
+            </button>
+            <div id="responsive-result" class="result-box" style="display: none;"></div>
+        </div>
+
+        <!-- Test 4: Selection Functionality -->
+        <div class="test-section">
+            <h3>👆 Test 4: Selection Functionality</h3>
+            <p><strong>Requirement 2.4:</strong> Selection functionality maintained in carousel</p>
+            
+            <div class="carousel-demo" id="selection-demo">
+                <div class="carousel-container" id="selection-carousel">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div style="margin: 12px 0;">
+                Selected Expression: <span id="selected-expression" class="info">None</span>
+            </div>
+            
+            <button class="test-button" onclick="testSelectionFunctionality()">
+                Test Selection
+            </button>
+            <div id="selection-result" class="result-box" style="display: none;"></div>
+        </div>
+
+        <!-- Test 5: Custom Expression Management -->
+        <div class="test-section">
+            <h3>➕ Test 5: Custom Expression Management</h3>
+            <p><strong>Requirement 2.5:</strong> Custom expressions in carousel format</p>
+            
+            <div class="carousel-demo" id="custom-demo">
+                <div class="carousel-container" id="custom-carousel">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div style="margin: 12px 0;">
+                <button class="test-button" onclick="addCustomExpression()">Add Custom Expression</button>
+                <span>Total Expressions: <span id="expression-count" class="info">0</span></span>
+            </div>
+            
+            <button class="test-button" onclick="testCustomExpressionManagement()">
+                Test Custom Management
+            </button>
+            <div id="custom-result" class="result-box" style="display: none;"></div>
+        </div>
+
+        <!-- Run All Tests -->
+        <div class="test-section" style="text-align: center; margin-top: 32px;">
+            <button class="test-button" onclick="runAllCarouselTests()" style="font-size: 18px; padding: 12px 24px;">
+                🚀 Run All Carousel Tests
+            </button>
+            <button class="test-button" onclick="clearResults()" style="background: #ff70a6;">
+                🗑️ Clear Results
+            </button>
+        </div>
+    </div>
+
+    <script src="test-carousel-functionality.js"></script>
+    <script>
+        let carouselTester;
+        let testResults = { total: 0, passed: 0, failed: 0, running: 0 };
+        let selectedExpression = null;
+        let expressions = [
+            { key: 'happy', name: 'Happy', emoji: '😊' },
+            { key: 'sad', name: 'Sad', emoji: '😢' },
+            { key: 'excited', name: 'Excited', emoji: '🤩' },
+            { key: 'angry', name: 'Angry', emoji: '😠' },
+            { key: 'surprised', name: 'Surprised', emoji: '😲' },
+            { key: 'confused', name: 'Confused', emoji: '😕' },
+            { key: 'laughing', name: 'Laughing', emoji: '😂' },
+            { key: 'winking', name: 'Winking', emoji: '😉' },
+            { key: 'sleepy', name: 'Sleepy', emoji: '😴' },
+            { key: 'cool', name: 'Cool', emoji: '😎' }
+        ];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            carouselTester = new CarouselFunctionalityTester();
+            initializeCarousels();
+            updateDashboard();
+        });
+
+        function updateDashboard() {
+            document.getElementById('total-tests').textContent = testResults.total;
+            document.getElementById('passed-tests').textContent = testResults.passed;
+            document.getElementById('failed-tests').textContent = testResults.failed;
+            document.getElementById('running-tests').textContent = testResults.running;
+        }
+
+        function showResult(elementId, content, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.textContent = content;
+            element.style.background = isSuccess ? '#d4edda' : '#f8d7da';
+            element.style.borderColor = isSuccess ? '#c3e6cb' : '#f5c6cb';
+        }
+
+        function renderExpressions(containerId, includeAddButton = false, enableSelection = false) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            container.innerHTML = expressions.map(expr => `
+                <div class="expression-item ${enableSelection && selectedExpression === expr.key ? 'selected' : ''} ${expr.isCustom ? 'custom-expression' : ''}" 
+                     data-key="${expr.key}" 
+                     onclick="${enableSelection ? `selectExpression('${expr.key}')` : ''}">
+                    <div class="expression-emoji">${expr.emoji}</div>
+                    <div class="expression-name">${expr.name}</div>
+                    ${expr.isCustom ? `<button class="delete-btn" onclick="deleteExpression('${expr.key}')" title="Delete">×</button>` : ''}
+                </div>
+            `).join('') + (includeAddButton ? `
+                <div class="add-expression-btn" onclick="addCustomExpression()">
+                    <div style="font-size: 32px; margin-bottom: 4px;">+</div>
+                    <div style="font-size: 12px; font-weight: bold;">Add New</div>
+                </div>
+            ` : '');
+
+            // Update expression count
+            const countElement = document.getElementById('expression-count');
+            if (countElement) {
+                countElement.textContent = expressions.length;
+            }
+        }
+
+        function initializeCarousels() {
+            renderExpressions('horizontal-carousel');
+            renderExpressions('navigation-carousel');
+            renderExpressions('responsive-carousel');
+            renderExpressions('selection-carousel', false, true);
+            renderExpressions('custom-carousel', true);
+            
+            setupNavigationArrows();
+        }
+
+        function setupNavigationArrows() {
+            const carousel = document.getElementById('navigation-carousel');
+            const leftArrow = document.getElementById('nav-left');
+            const rightArrow = document.getElementById('nav-right');
+
+            if (!carousel || !leftArrow || !rightArrow) return;
+
+            const checkArrows = () => {
+                const { scrollLeft, scrollWidth, clientWidth } = carousel;
+                leftArrow.style.display = scrollLeft > 0 ? 'flex' : 'none';
+                rightArrow.style.display = scrollLeft < scrollWidth - clientWidth - 1 ? 'flex' : 'none';
+            };
+
+            carousel.addEventListener('scroll', checkArrows);
+            checkArrows();
+
+            leftArrow.onclick = () => {
+                carousel.scrollBy({ left: -200, behavior: 'smooth' });
+            };
+
+            rightArrow.onclick = () => {
+                carousel.scrollBy({ left: 200, behavior: 'smooth' });
+            };
+        }
+
+        function selectExpression(key) {
+            selectedExpression = key;
+            const expr = expressions.find(e => e.key === key);
+            document.getElementById('selected-expression').textContent = expr ? expr.name : 'None';
+            renderExpressions('selection-carousel', false, true);
+        }
+
+        function addCustomExpression() {
+            const customEmojis = ['🎨', '🌟', '🔥', '💎', '🚀', '🎯', '⚡', '🌈', '🎪', '🎭'];
+            const randomEmoji = customEmojis[Math.floor(Math.random() * customEmojis.length)];
+            
+            const newExpression = {
+                key: `custom-${Date.now()}`,
+                name: 'Custom',
+                emoji: randomEmoji,
+                isCustom: true
+            };
+            
+            expressions.push(newExpression);
+            renderExpressions('custom-carousel', true);
+        }
+
+        function deleteExpression(key) {
+            expressions = expressions.filter(expr => expr.key !== key);
+            renderExpressions('custom-carousel', true);
+        }
+
+        function simulateViewport(width, name) {
+            const demo = document.getElementById('responsive-demo');
+            demo.style.width = width + 'px';
+            demo.style.border = `3px solid ${width < 768 ? '#ff70a6' : width < 1200 ? '#ffd670' : '#70d6ff'}`;
+            
+            // Update expression sizes based on viewport
+            const items = demo.querySelectorAll('.expression-item');
+            items.forEach(item => {
+                if (width < 768) {
+                    item.style.width = '80px';
+                    item.style.height = '80px';
+                    item.querySelector('.expression-emoji').style.fontSize = '24px';
+                    item.querySelector('.expression-name').style.fontSize = '10px';
+                } else {
+                    item.style.width = '100px';
+                    item.style.height = '100px';
+                    item.querySelector('.expression-emoji').style.fontSize = '32px';
+                    item.querySelector('.expression-name').style.fontSize = '12px';
+                }
+            });
+            
+            showResult('responsive-result', `Viewport simulated: ${name} (${width}px)`, true);
+        }
+
+        // Test Functions
+        async function testHorizontalDisplay() {
+            testResults.running++;
+            testResults.total++;
+            updateDashboard();
+
+            try {
+                const result = await carouselTester.testHorizontalScrollableDisplay();
+                
+                testResults.running--;
+                if (result) testResults.passed++;
+                else testResults.failed++;
+                
+                showResult('horizontal-result', 
+                    `Horizontal Scrollable Display: ${result ? 'PASS' : 'FAIL'}\n` +
+                    `Layout and overflow behavior validated`, result);
+            } catch (error) {
+                testResults.running--;
+                testResults.failed++;
+                showResult('horizontal-result', `Error: ${error.message}`, false);
+            }
+            
+            updateDashboard();
+        }
+
+        async function testNavigationArrows() {
+            testResults.running++;
+            testResults.total++;
+            updateDashboard();
+
+            try {
+                const result = await carouselTester.testNavigationArrows();
+                
+                testResults.running--;
+                if (result) testResults.passed++;
+                else testResults.failed++;
+                
+                showResult('navigation-result', 
+                    `Navigation Arrows: ${result ? 'PASS' : 'FAIL'}\n` +
+                    `Arrow visibility and click functionality validated`, result);
+            } catch (error) {
+                testResults.running--;
+                testResults.failed++;
+                showResult('navigation-result', `Error: ${error.message}`, false);
+            }
+            
+            updateDashboard();
+        }
+
+        async function testResponsiveBehavior() {
+            testResults.running++;
+            testResults.total++;
+            updateDashboard();
+
+            try {
+                const result = await carouselTester.testResponsiveBehavior();
+                
+                testResults.running--;
+                if (result) testResults.passed++;
+                else testResults.failed++;
+                
+                showResult('responsive-result', 
+                    `Responsive Behavior: ${result ? 'PASS' : 'FAIL'}\n` +
+                    `Multiple viewport sizes tested and validated`, result);
+            } catch (error) {
+                testResults.running--;
+                testResults.failed++;
+                showResult('responsive-result', `Error: ${error.message}`, false);
+            }
+            
+            updateDashboard();
+        }
+
+        async function testSelectionFunctionality() {
+            testResults.running++;
+            testResults.total++;
+            updateDashboard();
+
+            try {
+                const result = await carouselTester.testSelectionFunctionality();
+                
+                testResults.running--;
+                if (result) testResults.passed++;
+                else testResults.failed++;
+                
+                showResult('selection-result', 
+                    `Selection Functionality: ${result ? 'PASS' : 'FAIL'}\n` +
+                    `Click selection and visual feedback validated`, result);
+            } catch (error) {
+                testResults.running--;
+                testResults.failed++;
+                showResult('selection-result', `Error: ${error.message}`, false);
+            }
+            
+            updateDashboard();
+        }
+
+        async function testCustomExpressionManagement() {
+            testResults.running++;
+            testResults.total++;
+            updateDashboard();
+
+            try {
+                const result = await carouselTester.testCustomExpressionManagement();
+                
+                testResults.running--;
+                if (result) testResults.passed++;
+                else testResults.failed++;
+                
+                showResult('custom-result', 
+                    `Custom Expression Management: ${result ? 'PASS' : 'FAIL'}\n` +
+                    `Add/delete functionality and visual distinction validated`, result);
+            } catch (error) {
+                testResults.running--;
+                testResults.failed++;
+                showResult('custom-result', `Error: ${error.message}`, false);
+            }
+            
+            updateDashboard();
+        }
+
+        async function runAllCarouselTests() {
+            clearResults();
+            
+            console.log('🚀 Starting comprehensive carousel functionality tests...');
+            
+            await testHorizontalDisplay();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testNavigationArrows();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testResponsiveBehavior();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testSelectionFunctionality();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testCustomExpressionManagement();
+            
+            console.log('✅ All carousel functionality tests completed!');
+            
+            // Show final summary
+            const successRate = testResults.total > 0 ? 
+                Math.round((testResults.passed / testResults.total) * 100) : 0;
+            
+            alert(`🎠 Carousel Test Suite Complete!\n\n` +
+                  `Total Tests: ${testResults.total}\n` +
+                  `Passed: ${testResults.passed}\n` +
+                  `Failed: ${testResults.failed}\n` +
+                  `Success Rate: ${successRate}%`);
+        }
+
+        function clearResults() {
+            testResults = { total: 0, passed: 0, failed: 0, running: 0 };
+            updateDashboard();
+            
+            // Hide all result boxes
+            const resultBoxes = document.querySelectorAll('.result-box');
+            resultBoxes.forEach(box => box.style.display = 'none');
+            
+            // Reset viewport simulator
+            document.getElementById('responsive-demo').style.width = '100%';
+            document.getElementById('responsive-demo').style.border = '2px solid #242424';
+        }
+    </script>
+</body>
+</html>

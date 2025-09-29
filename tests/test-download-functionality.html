@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Download Functionality Test Suite</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #70d6ff, #e9ff70, #ffd670);
+            min-height: 100vh;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border: 4px solid #242424;
+            border-radius: 12px;
+            padding: 24px;
+        }
+        .test-section {
+            margin-bottom: 32px;
+            padding: 20px;
+            border: 2px solid #242424;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .test-case {
+            margin-bottom: 16px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+        }
+        .test-button {
+            background: #70d6ff;
+            color: #242424;
+            border: 3px solid #242424;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            transition: transform 0.1s;
+        }
+        .test-button:hover {
+            transform: translate(1px, 1px);
+        }
+        .test-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .info { color: #17a2b8; font-weight: bold; }
+        .warning { color: #ffc107; font-weight: bold; }
+        .result-box {
+            margin-top: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #28a745;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 style="text-align: center; color: #242424; margin-bottom: 32px;">
+            🧪 Download Functionality Test Suite
+        </h1>
+        
+        <!-- Test Status Overview -->
+        <div class="test-section">
+            <h2>📊 Test Status Overview</h2>
+            <div id="test-overview">
+                <div>Total Tests: <span id="total-tests">0</span></div>
+                <div>Passed: <span id="passed-tests" class="success">0</span></div>
+                <div>Failed: <span id="failed-tests" class="error">0</span></div>
+                <div>Pending: <span id="pending-tests" class="warning">0</span></div>
+            </div>
+        </div>
+
+        <!-- Test 1: Zero Stickers Scenario -->
+        <div class="test-section">
+            <h2>🚫 Test 1: Zero Stickers Scenario</h2>
+            <p><strong>Requirement:</strong> Test download with zero stickers (button should be disabled)</p>
+            
+            <div class="test-case">
+                <h3>1.1 Button State with No Stickers</h3>
+                <button class="test-button" onclick="testZeroStickersButtonState()">
+                    Test Button Disabled State
+                </button>
+                <div id="zero-stickers-result" class="result-box"></div>
+            </div>
+
+            <div class="test-case">
+                <h3>1.2 Error Message Display</h3>
+                <button class="test-button" onclick="testZeroStickersError()">
+                    Test Error Message
+                </button>
+                <div id="zero-stickers-error-result" class="result-box"></div>
+            </div>
+        </div>
+
+        <!-- Test 2: Single Sticker Download -->
+        <div class="test-section">
+            <h2>📦 Test 2: Single Sticker Download</h2>
+            <p><strong>Requirement:</strong> Test download with single sticker</p>
+            
+            <div class="test-case">
+                <h3>2.1 Create Mock Single Sticker</h3>
+                <button class="test-button" onclick="createMockSingleSticker()">
+                    Create Single Sticker
+                </button>
+                <div id="single-sticker-create-result" class="result-box"></div>
+            </div>
+
+            <div class="test-case">
+                <h3>2.2 Download Single Sticker</

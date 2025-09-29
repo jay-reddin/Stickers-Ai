@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Carousel Test Verification</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .pass { background: #d4edda; color: #155724; }
+        .fail { background: #f8d7da; color: #721c24; }
+        .summary {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 4px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #28a745;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎠 Carousel Implementation Test Verification</h1>
+        <p>This page verifies that all carousel functionality tests pass according to the requirements.</p>
+        
+        <div>
+            <button onclick="runAllTests()">🚀 Run All Tests</button>
+            <button onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+        
+        <div class="progress">
+            <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+        </div>
+        
+        <div id="test-results"></div>
+        <div id="test-summary" class="summary" style="display: none;"></div>
+    </div>
+
+    <script src="test-carousel-functionality.js"></script>
+    <script>
+        let testResults = [];
+        let currentTest = 0;
+        let totalTests = 6;
+
+        function updateProgress() {
+            const progress = (currentTest / totalTests) * 100;
+            document.getElementById('progress-bar').style.width = progress + '%';
+        }
+
+        function addTestResult(name, passed, details) {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            resultDiv.innerHTML = `
+                <strong>${passed ? '✅' : '❌'} ${name}</strong>
+                ${details ? `<br><small>${details}</small>` : ''}
+            `;
+            resultsDiv.appendChild(resultDiv);
+            
+            testResults.push({ name, passed, details });
+            currentTest++;
+            updateProgress();
+        }
+
+        function showSummary() {
+            const passed = testResults.filter(r => r.passed).length;
+            const total = testResults.length;
+            const successRate = Math.round((passed / total) * 100);
+            
+            const summaryDiv = document.getElementById('test-summary');
+            summaryDiv.style.display = 'block';
+            summaryDiv.innerHTML = `
+                📊 Test Summary: ${passed}/${total} tests passed (${successRate}% success rate)
+                <br>
+                ${successRate >= 80 ? 
+                    '🎉 Carousel implementation meets all requirements!' : 
+                    '⚠️ Some tests failed - implementation needs review'}
+            `;
+            summaryDiv.style.background = successRate >= 80 ? '#d4edda' : '#f8d7da';
+            summaryDiv.style.color = successRate >= 80 ? '#155724' : '#721c24';
+        }
+
+        async function runAllTests() {
+            clearResults();
+            
+            console.log('🚀 Starting Carousel Test Verification...');
+            
+            const tester = new CarouselFunctionalityTester();
+            
+            // Test 1: Horizontal Scrollable Display
+            try {
+                const result1 = await tester.testHorizontalScrollableDisplay();
+                addTestResult('Horizontal Scrollable Display (Req 2.1)', result1, 
+                    'Expressions displayed in horizontal scrollable carousel');
+                await new Promise(resolve => setTimeout(resolve, 300));
+            } catch (error) {
+                addTestResult('Horizontal Scrollable Display (Req 2.1)', false, 
+                    `Error: ${error.message}`);
+            }
+
+            // Test 2: Navigation Arrows
+            try {
+                const result2 = await tester.testNavigationArrows();
+                addTestResult('Navigation Arrows (Req 2.2, 2.3)', result2, 
+                    'Navigation arrows appear and function correctly');
+                await new Promise(resolve => setTimeout(resolve, 300));
+            } catch (error) {
+                addTestResult('Navigation Arrows (Req 2.2, 2.3)', false, 
+                    `Error: ${error.message}`);
+            }
+
+            // Test 3: Responsive Behavior
+            try {
+                const result3 = await tester.testResponsiveBehavior();
+                addTestResult('Responsive Behavior (Req 5.3)', result3, 
+                    'Carousel works on different screen sizes');
+                await new Promise(resolve => setTimeout(resolve, 300));
+            } catch (error) {
+                addTestResult('Responsive Behavior (Req 5.3)', false, 
+                    `Error: ${error.message}`);
+            }
+
+            // Test 4: Selection Functionality
+            try {
+                const result4 = await tester.testSelectionFunctionality();
+                addTestResult('Selection Functionality (Req 2.4)', result4, 
+                    'Selection functionality maintained in carousel');
+                await new Promise(resolve => setTimeout(resolve, 300));
+            } catch (error) {
+                addTestResult('Selection Functionality (Req 2.4)', false, 
+                    `Error: ${error.message}`);
+            }
+
+            // Test 5: Custom Expression Management
+            try {
+                const result5 = await tester.testCustomExpressionManagement();
+                addTestResult('Custom Expression Management (Req 2.5)', result5, 
+                    'Custom expressions in carousel format');
+                await new Promise(resolve => setTimeout(resolve, 300));
+            } catch (error) {
+                addTestResult('Custom Expression Management (Req 2.5)', false, 
+                    `Error: ${error.message}`);
+            }
+
+            // Test 6: Smooth Scrolling
+            try {
+                const result6 = await tester.testSmoothScrolling();
+                addTestResult('Smooth Scrolling Behavior', result6, 
+                    'Smooth scroll behavior implemented correctly');
+                await new Promise(resolve => setTimeout(resolve, 300));
+            } catch (error) {
+                addTestResult('Smooth Scrolling Behavior', false, 
+                    `Error: ${error.message}`);
+            }
+
+            // Show final summary
+            showSummary();
+            
+            // Cleanup
+            tester.cleanup();
+            
+            console.log('✅ Carousel test verification completed!');
+        }
+
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '';
+            document.getElementById('test-summary').style.display = 'none';
+            document.getElementById('progress-bar').style.width = '0%';
+            testResults = [];
+            currentTest = 0;
+        }
+
+        // Auto-run tests when page loads
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>

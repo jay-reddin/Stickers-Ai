@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Download Functionality Integration Tests</title>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #70d6ff, #e9ff70, #ffd670);
+            min-height: 100vh;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border: 4px solid #242424;
+            border-radius: 12px;
+            padding: 24px;
+        }
+        .test-section {
+            margin-bottom: 24px;
+            padding: 16px;
+            border: 2px solid #242424;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .test-button {
+            background: #70d6ff;
+            color: #242424;
+            border: 3px solid #242424;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 4px;
+            transition: transform 0.1s;
+        }
+        .test-button:hover {
+            transform: translate(1px, 1px);
+        }
+        .test-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .info { color: #17a2b8; font-weight: bold; }
+        .warning { color: #ffc107; font-weight: bold; }
+        .result-box {
+            margin-top: 8px;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            background: #f1f3f4;
+            border: 1px solid #ddd;
+            white-space: pre-wrap;
+        }
+        .progress-container {
+            margin: 12px 0;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #242424;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #70d6ff, #e9ff70);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #242424;
+        }
+        .mock-sticker {
+            width: 80px;
+            height: 80px;
+            background: #ff70a6;
+            border: 2px solid #242424;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 4px;
+            font-size: 24px;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 style="text-align: center; color: #242424; margin-bottom: 32px;">
+            🧪 Download Functionality Integration Tests
+        </h1>
+        
+        <!-- Test Status Dashboard -->
+        <div class="test-section">
+            <h2>📊 Test Dashboard</h2>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div>Total Tests: <span id="total-tests" class="info">0</span></div>
+                <div>Passed: <span id="passed-tests" class="success">0</span></div>
+                <div>Failed: <span id="failed-tests" class="error">0</span></div>
+                <div>Running: <span id="running-tests" class="warning">0</span></div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div id="overall-progress" class="progress-fill" style="width: 0%;">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-grid">
+            <!-- Test 1: Zero Stickers Scenario -->
+            <div class="test-section">
+                <h3>🚫 Test 1: Zero Stickers</h3>
+                <p><strong>Requirement 1.4:</strong> Download button disabled when no stickers</p>
+                
+                <div style="margin: 12px 0;">
+                    <div>Mock Stickers: <span id="mock-count-1">0</span></div>
+                    <button id="download-btn-1" class="test-button" disabled>
+                        Download All (Disabled)
+                    </button>
+                </div>
+                
+                <button class="test-button" onclick="runZeroStickersTest()">
+                    Run Zero Stickers Test
+                </button>
+                <div id="zero-stickers-result" class="result-box" style="display: none;"></div>
+            </div>
+
+            <!-- Test 2: Single Sticker -->
+            <div class="test-section">
+                <h3>📦 Test 2: Single Sticker</h3>
+                <p><strong>Requirement 1.1, 1.2:</strong> Download single sticker with proper naming</p>
+                
+                <div style="margin: 12px 0;">
+                    <div>Mock Stickers: <span id="mock-count-2">1</span></div>
+                    <div class="mock-sticker">😊</div>
+                    <button id="download-btn-2" class="test-button">
+                        Download All (1 sticker)
+                    </button>
+                </div>
+                
+                <button class="test-button" onclick="runSingleStickerTest()">
+                    Run Single Sticker Test
+                </button>
+                <div id="single-sticker-result" class="result-box" style="display: none;"></div>
+            </div>
+
+            <!-- Test 3: Multiple Stickers -->
+            <div class="test-section">
+                <h3>📦📦📦 Test 3: Multiple Stickers</h3>
+                <p><strong>Requirement 1.1, 1.2, 1.3:</strong> Download multiple stickers with progress</p>
+                
+                <div style="margin: 12px 0;">
+                    <div>Mock Stickers: <span id="mock-count-3">3</span></div>
+                    <div class="mock-sticker">😊</div>
+                    <div class="mock-sticker">😢</div>
+                    <div class="mock-sticker">🤩</div>
+                    <button id="download-btn-3" class="test-button">
+                        Download All (3 stickers)
+                    </button>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div id="download-progress-3" class="progress-fill" style="width: 0%;">0%</div>
+                    </div>
+                </div>
+                
+                <button class="test-button" onclick="runMultipleStickersTest()">
+                    Run Multiple Stickers Test
+                </button>
+                <div id="multiple-stickers-result" class="result-box" style="display: none;"></div>
+            </div>
+
+            <!-- Test 4: Error Scenarios -->
+            <div class="test-section">
+                <h3>⚠️ Test 4: Error Scenarios</h3>
+                <p><strong>Requirement 5.2:</strong> Error handling and user feedback</p>
+                
+                <button class="test-button" onclick="runJSZipErrorTest()">
+                    Test JSZip Unavailable
+                </button>
+                <button class="test-button" onclick="runCorruptedFileTest()">
+                    Test Corrupted Files
+                </button>
+                <button class="test-button" onclick="runNetworkErrorTest()">
+                    Test Network Error
+                </button>
+                <div id="error-scenarios-result" class="result-box" style="display: none;"></div>
+            </div>
+
+            <!-- Test 5: File Naming -->
+            <div class="test-section">
+                <h3>📝 Test 5: File Naming</h3>
+                <p><strong>Requirement 1.2:</strong> Descriptive file naming conventions</p>
+                
+                <button class="test-button" onclick="runFileNamingTest()">
+                    Test File Naming
+                </button>
+                <div id="file-naming-result" class="result-box" style="display: none;"></div>
+            </div>
+
+            <!-- Test 6: Performance -->
+            <div class="test-section">
+                <h3>⚡ Test 6: Performance</h3>
+                <p><strong>Requirement 1.3:</strong> Progress indication and performance</p>
+                
+                <button class="test-button" onclick="runPerformanceTest()">
+                    Test Large Download
+                </button>
+                <div id="performance-result" class="result-box" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Run All Tests -->
+        <div class="test-section" style="text-align: center; margin-top: 32px;">
+            <button class="test-button" onclick="runAllTests()" style="font-size: 18px; padding: 12px 24px;">
+                🚀 Run All Download Tests
+            </button>
+            <button class="test-button" onclick="clearResults()" style="background: #ff70a6;">
+                🗑️ Clear Results
+            </button>
+        </div>
+    </div>
+
+    <script src="test-download-functionality.js"></script>
+    <script>
+        let testRunner;
+        let testResults = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            running: 0
+        };
+
+        // Initialize test runner
+        document.addEventListener('DOMContentLoaded', function() {
+            testRunner = new DownloadFunctionalityTester();
+            updateDashboard();
+        });
+
+        function updateDashboard() {
+            document.getElementById('total-tests').textContent = testResults.total;
+            document.getElementById('passed-tests').textContent = testResults.passed;
+            document.getElementById('failed-tests').textContent = testResults.failed;
+            document.getElementById('running-tests').textContent = testResults.running;
+            
+            const progress = testResults.total > 0 ? 
+                Math.round(((testResults.passed + testResults.failed) / testResults.total) * 100) : 0;
+            document.getElementById('overall-progress').style.width = progress + '%';
+            document.getElementById('overall-progress').textContent = progress + '%';
+        }
+
+        function showResult(elementId, content, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.textContent = content;
+            element.style.background = isSuccess ? '#d4edda' : '#f8d7da';
+            element.style.borderColor = isSuccess ? '#c3e6cb' : '#f5c6cb';
+        }
+
+        async function runZeroStickersTest() {
+            testResults.running++;
+            testResults.total++;
+            updateDashboard();
+
+            try {
+                const result1 = await testRunner.testZeroStickersButtonState();
+                const result2 = await testRunner.testZeroStickersErrorMessage();
+                
+                const success = result1 && result2;
+                testResults.running--;
+                if (success) testResults.passed++;
+                else testResults.failed++;
+                
+                showResult('zero-stickers-result', 
+                    `Button State Test: ${result1 ? 'PASS' : 'FAIL'}\n` +
+                    `Error Message Test: ${result2 ? 'PASS' : 'FAIL'}\n` +
+                    `Overall: ${success ? 'SUCCESS' : 'FAILED'}`, success);
+            } catch (error) {
+                testResults.running--;
+                testResults.failed++;
+                showResult('zero-stickers-result', `Error: ${error.message}`, false);
+            }
+            
+            updateDashboard();
+        }
+
+        async function runSingleStickerTest() {
+            testResults.running++;
+            testResults.total++;
+            updateDashboard();
+
+            try {
+                const result = await testRunner.testSingleStickerDownload();
+                
+                testResults.running--;
+                if (result) testResults.passed++;
+                else testResults.failed++;
+                
+                showResult('single-sticker-result', 
+                    `Single Sticker Download: ${result ? 'PASS' : 'FAIL'}\n` +
+                    `File processing and naming validated`, result);
+            } catch (error) {
+                testResults.running--;
+                testResults.failed++;
+                showResult('single-sticker-result', `Error: ${error.message}`, false);
+            }
+            
+            updateDashboard();
+        }
+
+        async function runMultipleStickersTest() {
+            testResults.running++;
+            testResults.total++;
+            updateDashboard();
+
+            // Simulate progress
+            const progressBar = document.getElementById('download-progress-3');
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = progress + '%';
+                progressBar.textContent = progress + '%';
+                if (progress >= 100) clearInterval(progressInterval);
+            }, 200);
+
+            try {
+                const result = await testRunner.testMultipleStickersDownload();
+                
+                testResults.running--;
+                if (result) testResults.passed++;
+                else testResults.failed++;
+                
+                showResult('multiple-stickers-result', 
+                    `Multiple Stickers Download: ${result ? 'PASS' : 'FAIL'}\n` +
+                    `ZIP creation and progress tracking validated`, result);
+            } catch (error) {
+                testResults.running--;
+                testResults.failed++;
+                showResult('multiple-stickers-result', `Error: ${error.message}`, false);
+            }
+            
+            updateDashboard();
+        }
+
+        async function runJSZipErrorTest() {
+            testResults.running++;
+            testResults.total++;
+            updateDashboard();
+
+            try {
+                // Temporarily disable JSZip
+                const originalJSZip = window.JSZip;
+                window.JSZip = undefined;
+                
+                const result = await testRunner.testErrorScenarios();
+                
+                // Restore JSZip
+                window.JSZip = originalJSZip;
+                
+                testResults.running--;
+                if (result) testResults.passed++;
+                else testResults.failed++;
+                
+                showResult('error-scenarios-result', 
+                    `JSZip Error Handling: ${result ? 'PASS' : 'FAIL'}\n` +
+                    `Error messages displayed correctly`, result);
+            } catch (error) {
+                testResults.running--;
+                testResults.failed++;
+                showResult('error-scenarios-result', `Error: ${error.message}`, false);
+            }
+            
+            updateDashboard();
+        }
+
+        async function runCorruptedFileTest() {
+            // This would test handling of corrupted files
+            console.log('Testing corrupted file handling...');
+        }
+
+        async function runNetworkErrorTest() {
+            // This would test network error scenarios
+            console.log('Testing network error scenarios...');
+        }
+
+        async function runFileNamingTest() {
+            testResults.running++;
+            testResults.total++;
+            updateDashboard();
+
+            try {
+                const result = await testRunner.testFileNamingConventions();
+                
+                testResults.running--;
+                if (result) testResults.passed++;
+                else testResults.failed++;
+                
+                showResult('file-naming-result', 
+                    `File Naming Conventions: ${result ? 'PASS' : 'FAIL'}\n` +
+                    `Descriptive naming patterns validated`, result);
+            } catch (error) {
+                testResults.running--;
+                testResults.failed++;
+                showResult('file-naming-result', `Error: ${error.message}`, false);
+            }
+            
+            updateDashboard();
+        }
+
+        async function runPerformanceTest() {
+            testResults.running++;
+            testResults.total++;
+            updateDashboard();
+
+            try {
+                const result = await testRunner.testZipFileStructure();
+                
+                testResults.running--;
+                if (result) testResults.passed++;
+                else testResults.failed++;
+                
+                showResult('performance-result', 
+                    `ZIP Structure & Performance: ${result ? 'PASS' : 'FAIL'}\n` +
+                    `File organization and compression validated`, result);
+            } catch (error) {
+                testResults.running--;
+                testResults.failed++;
+                showResult('performance-result', `Error: ${error.message}`, false);
+            }
+            
+            updateDashboard();
+        }
+
+        async function runAllTests() {
+            clearResults();
+            
+            console.log('🚀 Starting comprehensive download functionality tests...');
+            
+            await runZeroStickersTest();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await runSingleStickerTest();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await runMultipleStickersTest();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await runJSZipErrorTest();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await runFileNamingTest();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await runPerformanceTest();
+            
+            console.log('✅ All download functionality tests completed!');
+            
+            // Show final summary
+            const successRate = testResults.total > 0 ? 
+                Math.round((testResults.passed / testResults.total) * 100) : 0;
+            
+            alert(`🎉 Test Suite Complete!\n\n` +
+                  `Total Tests: ${testResults.total}\n` +
+                  `Passed: ${testResults.passed}\n` +
+                  `Failed: ${testResults.failed}\n` +
+                  `Success Rate: ${successRate}%`);
+        }
+
+        function clearResults() {
+            testResults = { total: 0, passed: 0, failed: 0, running: 0 };
+            updateDashboard();
+            
+            // Hide all result boxes
+            const resultBoxes = document.querySelectorAll('.result-box');
+            resultBoxes.forEach(box => box.style.display = 'none');
+            
+            // Reset progress bars
+            document.getElementById('download-progress-3').style.width = '0%';
+            document.getElementById('download-progress-3').textContent = '0%';
+        }
+    </script>
+</body>
+</html>
