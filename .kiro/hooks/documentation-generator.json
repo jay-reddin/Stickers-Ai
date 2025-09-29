@@ -1,0 +1,7 @@
+{
+  "name": "Documentation Generator",
+  "description": "This hook automatically updates documentation when code changes.",
+  "triggerType": "manual",
+  "instructions": "Generate comprehensive documentation for the current file:\n1. Extract function and class signatures\n2. Document parameters and return types\n3. Provide usage examples based on existing code\n4. Update the README.md with any new exports\n5. Ensure documentation follows project standards",
+  "enabled": true
+}

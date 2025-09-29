@@ -1,0 +1,2163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Made by JR</title>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+      }
+      #container {
+        width: 100%;
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script>
+      window.CALLAI_API_KEY = "sk-vibes-proxy-managed";
+      window.CALLAI_CHAT_URL = "https://vibes-diy-api.com/";
+      window.CALLAI_IMG_URL = "https://vibes-diy-api.com/";
+    </script>
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@19.1.1/es2022/react.mjs",
+          "react-dom": "https://esm.sh/react-dom@19.1.1/es2022/react-dom.mjs",
+          "react-dom/client": "https://esm.sh/react-dom@19.1.1/es2022/client.mjs",
+          "use-fireproof": "https://esm.sh/use-fireproof@0.23.11?external=react,react-dom",
+          "call-ai": "https://esm.sh/call-ai",
+          "use-vibes": "https://esm.sh/use-vibes",
+          "three": "https://esm.sh/three"
+        }
+      }
+    </script>
+    <script type="text/babel" data-type="module">
+      import ReactDOMClient from "react-dom/client";
+
+      // prettier-ignore
+      import React, { useState, useCallback, useEffect, useRef } from 'react';
+      import { callAI } from "call-ai";
+      import { useFireproof } from "use-fireproof";
+      import { ImgGen } from "use-vibes";
+
+      // --- Helper Components & Icons ---
+
+      const UploadCloud = ({ className }) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+          <path d="M12 12v9" />
+          <path d="m16 16-4-4-4 4" />
+        </svg>
+      );
+
+      const LoaderCircle = ({ className }) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+        </svg>
+      );
+
+      const AlertTriangle = ({ className }) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+          <path d="M12 9v4" />
+          <path d="M12 17h.01" />
+        </svg>
+      );
+
+      const CameraIcon = ({ className }) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+          <circle cx="12" cy="13" r="3" />
+        </svg>
+      );
+
+      const RefreshIcon = ({ className }) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <path d="M3 2v6h6" />
+          <path d="M21 12A9 9 0 0 0 6 5.3L3 8" />
+          <path d="M21 22v-6h-6" />
+          <path d="M3 12a9 9 0 0 0 15 6.7l3-2.7" />
+        </svg>
+      );
+
+      const DownloadIcon = ({ className }) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+      );
+
+      const ChevronLeft = ({ className }) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <path d="m15 18-6-6 6-6" />
+        </svg>
+      );
+
+      const ChevronRight = ({ className }) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      );
+
+      const XIcon = ({ className }) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      );
+
+      const CopyIcon = ({ className }) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+        </svg>
+      );
+
+      const PlusIcon = ({ className }) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <path d="M5 12h14" />
+          <path d="M12 5v14" />
+        </svg>
+      );
+
+      const SaveIcon = ({ className }) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+          <polyline points="17 21 17 13 7 13 7 21" />
+          <polyline points="7 3 7 8 15 8" />
+        </svg>
+      );
+
+      const TrashIcon = ({ className }) => (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+        >
+          <path d="M3 6h18" />
+          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+        </svg>
+      );
+
+      // --- Add Style Modal Component ---
+      const AddStyleModal = ({ show, onClose, onAddStyle, database }) => {
+        const [styleName, setStyleName] = useState("");
+        const [styleDescription, setStyleDescription] = useState("");
+        const [exampleImage, setExampleImage] = useState(null);
+        const [exampleImagePreview, setExampleImagePreview] = useState(null);
+        const [isSubmitting, setIsSubmitting] = useState(false);
+        const [errors, setErrors] = useState({});
+
+        useEffect(() => {
+          if (!show) {
+            setStyleName("");
+            setStyleDescription("");
+            setExampleImage(null);
+            setExampleImagePreview(null);
+            setErrors({});
+          }
+        }, [show]);
+
+        const handleImageUpload = (event) => {
+          const file = event.target.files[0];
+          if (file && file.type.startsWith("image/")) {
+            const objectUrl = URL.createObjectURL(file);
+            setExampleImagePreview(objectUrl);
+            setExampleImage(file);
+            setErrors((prev) => ({ ...prev, image: null }));
+          } else {
+            setErrors((prev) => ({
+              ...prev,
+              image: "Please upload a valid image file.",
+            }));
+          }
+        };
+
+        const validateForm = () => {
+          const newErrors = {};
+
+          if (!styleName.trim()) {
+            newErrors.styleName = "Style name is required";
+          }
+
+          if (!styleDescription.trim()) {
+            newErrors.styleDescription = "Style description is required";
+          }
+
+          if (!exampleImage) {
+            newErrors.image = "Example image is required";
+          }
+
+          setErrors(newErrors);
+          return Object.keys(newErrors).length === 0;
+        };
+
+        const handleSubmit = async () => {
+          if (!validateForm()) return;
+
+          setIsSubmitting(true);
+          try {
+            const styleId = styleName.toLowerCase().replace(/[^a-z0-9]/g, "-");
+
+            const styleDoc = await database.put({
+              type: "custom-style",
+              id: styleId,
+              name: styleName,
+              description: styleDescription,
+              createdAt: Date.now(),
+              _files: {
+                example: exampleImage,
+              },
+            });
+
+            const newStyle = {
+              id: styleId,
+              name: styleName,
+              description: styleDescription,
+              imgUrl: URL.createObjectURL(exampleImage),
+              isCustom: true,
+              docId: styleDoc.id,
+            };
+
+            onAddStyle(newStyle);
+            onClose();
+          } catch (error) {
+            console.error("Error saving custom style:", error);
+            setErrors({ submit: "Failed to save style. Please try again." });
+          } finally {
+            setIsSubmitting(false);
+          }
+        };
+
+        if (!show) return null;
+
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+            <div className="bg-[#ffffff] rounded-lg border-4 border-[#242424] shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-[#242424]">
+                  Add Custom Style
+                </h3>
+                <button
+                  onClick={onClose}
+                  className="p-2 bg-[#ff70a6] border-2 border-[#242424] rounded-full text-[#242424] hover:translate-x-1 hover:translate-y-1 transition-transform"
+                >
+                  <XIcon className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-[#242424] font-bold mb-2">
+                    Style Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={styleName}
+                    onChange={(e) => {
+                      setStyleName(e.target.value);
+                      setErrors((prev) => ({ ...prev, styleName: null }));
+                    }}
+                    placeholder="e.g., Oil Painting, Minimalist, Grunge Art"
+                    className={`w-full p-3 border-4 rounded-lg text-[#242424] ${
+                      errors.styleName ? "border-[#ff70a6]" : "border-[#242424]"
+                    }`}
+                  />
+                  {errors.styleName && (
+                    <p className="text-[#ff70a6] text-sm mt-1 font-bold">
+                      {errors.styleName}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-[#242424] font-bold mb-2">
+                    Style Description *
+                  </label>
+                  <textarea
+                    value={styleDescription}
+                    onChange={(e) => {
+                      setStyleDescription(e.target.value);
+                      setErrors((prev) => ({
+                        ...prev,
+                        styleDescription: null,
+                      }));
+                    }}
+                    placeholder="Describe the visual characteristics of this style. This will help the AI understand how to generate stickers in this style. Be specific about colors, textures, techniques, etc."
+                    rows={4}
+                    className={`w-full p-3 border-4 rounded-lg text-[#242424] resize-none ${
+                      errors.styleDescription
+                        ? "border-[#ff70a6]"
+                        : "border-[#242424]"
+                    }`}
+                  />
+                  {errors.styleDescription && (
+                    <p className="text-[#ff70a6] text-sm mt-1 font-bold">
+                      {errors.styleDescription}
+                    </p>
+                  )}
+                  <p className="text-[#242424] text-sm mt-1 italic">
+                    Example: "Bold brushstrokes with thick paint texture,
+                    vibrant colors that blend and mix on canvas, visible paint
+                    ridges and artistic imperfections"
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-[#242424] font-bold mb-2">
+                    Example Style Image *
+                  </label>
+                  <div className="space-y-4">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="style-image-upload"
+                    />
+                    <label
+                      htmlFor="style-image-upload"
+                      className={`cursor-pointer bg-[#e9ff70] border-4 rounded-lg p-6 text-[#242424] font-bold hover:translate-x-1 hover:translate-y-1 transition-transform flex flex-col items-center justify-center ${
+                        errors.image ? "border-[#ff70a6]" : "border-[#242424]"
+                      }`}
+                    >
+                      <UploadCloud className="w-12 h-12 mb-2" />
+                      <span>Upload Example Image</span>
+                      <span className="text-sm font-normal mt-1">
+                        This helps the AI understand your style
+                      </span>
+                    </label>
+
+                    {exampleImagePreview && (
+                      <div className="text-center">
+                        <img
+                          src={exampleImagePreview}
+                          alt="Style example preview"
+                          className="h-32 w-32 object-cover rounded-lg shadow-lg mx-auto border-4 border-[#242424]"
+                        />
+                        <p className="text-[#242424] text-sm mt-2">
+                          Style example uploaded ✓
+                        </p>
+                      </div>
+                    )}
+
+                    {errors.image && (
+                      <p className="text-[#ff70a6] text-sm font-bold">
+                        {errors.image}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {errors.submit && (
+                  <div className="bg-[#ff70a6] border-4 border-[#242424] rounded-lg p-4">
+                    <p className="text-[#242424] font-bold">{errors.submit}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-4 pt-4">
+                  <button
+                    onClick={onClose}
+                    className="flex-1 bg-[#ffffff] text-[#242424] border-4 border-[#242424] font-bold py-3 px-6 rounded-lg hover:translate-x-1 hover:translate-y-1 transition-transform"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="flex-1 bg-[#70d6ff] text-[#242424] border-4 border-[#242424] font-bold py-3 px-6 rounded-lg hover:translate-x-1 hover:translate-y-1 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <LoaderCircle className="animate-spin w-5 h-5 mr-2" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <SaveIcon className="w-5 h-5 mr-2" />
+                        Add Style
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // --- Add Expression Modal Component ---
+      const AddExpressionModal = ({
+        show,
+        onClose,
+        onAddExpression,
+        database,
+      }) => {
+        const [expressionName, setExpressionName] = useState("");
+        const [expressionEmoji, setExpressionEmoji] = useState("");
+        const [isSubmitting, setIsSubmitting] = useState(false);
+        const [errors, setErrors] = useState({});
+
+        useEffect(() => {
+          if (!show) {
+            setExpressionName("");
+            setExpressionEmoji("");
+            setErrors({});
+          }
+        }, [show]);
+
+        const validateForm = () => {
+          const newErrors = {};
+
+          if (!expressionName.trim()) {
+            newErrors.expressionName = "Expression name is required";
+          }
+
+          if (!expressionEmoji.trim()) {
+            newErrors.expressionEmoji = "Emoji is required";
+          }
+
+          setErrors(newErrors);
+          return Object.keys(newErrors).length === 0;
+        };
+
+        const handleSubmit = async () => {
+          if (!validateForm()) return;
+
+          setIsSubmitting(true);
+          try {
+            const expressionKey = expressionName
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, "-");
+
+            const expressionDoc = await database.put({
+              type: "custom-expression",
+              key: expressionKey,
+              name: expressionName,
+              emoji: expressionEmoji,
+              createdAt: Date.now(),
+            });
+
+            const newExpression = {
+              key: expressionKey,
+              name: expressionName,
+              emoji: expressionEmoji,
+              isCustom: true,
+              docId: expressionDoc.id,
+            };
+
+            onAddExpression(newExpression);
+            onClose();
+          } catch (error) {
+            console.error("Error saving custom expression:", error);
+            setErrors({
+              submit: "Failed to save expression. Please try again.",
+            });
+          } finally {
+            setIsSubmitting(false);
+          }
+        };
+
+        if (!show) return null;
+
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+            <div className="bg-[#ffffff] rounded-lg border-4 border-[#242424] shadow-2xl p-6 w-full max-w-lg">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-[#242424]">
+                  Add Custom Expression
+                </h3>
+                <button
+                  onClick={onClose}
+                  className="p-2 bg-[#ff70a6] border-2 border-[#242424] rounded-full text-[#242424] hover:translate-x-1 hover:translate-y-1 transition-transform"
+                >
+                  <XIcon className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-[#242424] font-bold mb-2">
+                    Expression Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={expressionName}
+                    onChange={(e) => {
+                      setExpressionName(e.target.value);
+                      setErrors((prev) => ({ ...prev, expressionName: null }));
+                    }}
+                    placeholder="e.g., Excited, Sleepy, Mischievous"
+                    className={`w-full p-3 border-4 rounded-lg text-[#242424] ${
+                      errors.expressionName
+                        ? "border-[#ff70a6]"
+                        : "border-[#242424]"
+                    }`}
+                  />
+                  {errors.expressionName && (
+                    <p className="text-[#ff70a6] text-sm mt-1 font-bold">
+                      {errors.expressionName}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-[#242424] font-bold mb-2">
+                    Emoji *
+                  </label>
+                  <input
+                    type="text"
+                    value={expressionEmoji}
+                    onChange={(e) => {
+                      setExpressionEmoji(e.target.value);
+                      setErrors((prev) => ({ ...prev, expressionEmoji: null }));
+                    }}
+                    placeholder="🤩"
+                    className={`w-full p-3 border-4 rounded-lg text-[#242424] text-center text-2xl ${
+                      errors.expressionEmoji
+                        ? "border-[#ff70a6]"
+                        : "border-[#242424]"
+                    }`}
+                    maxLength="4"
+                  />
+                  {errors.expressionEmoji && (
+                    <p className="text-[#ff70a6] text-sm mt-1 font-bold">
+                      {errors.expressionEmoji}
+                    </p>
+                  )}
+                  <p className="text-[#242424] text-sm mt-1 italic">
+                    Choose an emoji that represents this expression
+                  </p>
+                </div>
+
+                {errors.submit && (
+                  <div className="bg-[#ff70a6] border-4 border-[#242424] rounded-lg p-4">
+                    <p className="text-[#242424] font-bold">{errors.submit}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-4 pt-4">
+                  <button
+                    onClick={onClose}
+                    className="flex-1 bg-[#ffffff] text-[#242424] border-4 border-[#242424] font-bold py-3 px-6 rounded-lg hover:translate-x-1 hover:translate-y-1 transition-transform"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="flex-1 bg-[#70d6ff] text-[#242424] border-4 border-[#242424] font-bold py-3 px-6 rounded-lg hover:translate-x-1 hover:translate-y-1 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <LoaderCircle className="animate-spin w-5 h-5 mr-2" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <SaveIcon className="w-5 h-5 mr-2" />
+                        Add Expression
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // --- Camera Modal Component ---
+      const CameraModal = ({ show, onClose, onCapture, videoRef }) => {
+        if (!show) return null;
+
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-2xl p-4 w-full max-w-3xl relative">
+              <h3 className="text-xl font-semibold mb-4 text-center">
+                Take a Photo
+              </h3>
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className="w-full rounded-md h-auto"
+              ></video>
+              <div className="flex justify-center mt-6 space-x-4">
+                <button
+                  onClick={onCapture}
+                  className="p-4 bg-blue-600 rounded-full text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition"
+                >
+                  <CameraIcon className="w-8 h-8" />
+                </button>
+              </div>
+              <button
+                onClick={onClose}
+                className="absolute top-3 right-3 p-2 bg-gray-200 rounded-full text-gray-700 hover:bg-gray-300 transition"
+              >
+                <XIcon className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+        );
+      };
+
+      // --- Main Application Component ---
+
+      const initialStyleOptions = [
+        {
+          id: "pop-art",
+          name: "Pop Art",
+          imgUrl:
+            "https://gstatic.com/synthidtextdemo/images/gemstickers/dot/pop_art_love.png",
+        },
+        {
+          id: "japanese-matchbox",
+          name: "Retro Matchbox",
+          imgUrl:
+            "https://gstatic.com/synthidtextdemo/images/gemstickers/dot/matchbox.png",
+        },
+        {
+          id: "cartoon-dino",
+          name: "Cartoon Dino",
+          imgUrl:
+            "https://gstatic.com/synthidtextdemo/images/gemstickers/dot/dragon.png",
+        },
+        {
+          id: "pixel-art",
+          name: "Pixel Art",
+          imgUrl:
+            "https://gstatic.com/synthidtextdemo/images/gemstickers/dot/pixel.png",
+        },
+        {
+          id: "royal",
+          name: "Royal",
+          imgUrl:
+            "https://gstatic.com/synthidtextdemo/images/gemstickers/dot/royal.png",
+        },
+        {
+          id: "football-sticker",
+          name: "Football Sticker",
+          imgUrl:
+            "https://gstatic.com/synthidtextdemo/images/gemstickers/dot/football.png",
+        },
+        {
+          id: "claymation",
+          name: "Claymation",
+          imgUrl:
+            "https://gstatic.com/synthidtextdemo/images/gemstickers/dot/claymation.png",
+        },
+        {
+          id: "vintage-bollywood",
+          name: "Vintage Bollywood",
+          imgUrl:
+            "https://gstatic.com/synthidtextdemo/images/gemstickers/dot/bolly.png",
+        },
+        {
+          id: "sticker-bomb",
+          name: "Sticker Bomb",
+          imgUrl:
+            "https://gstatic.com/synthidtextdemo/images/gemstickers/dot/bomb.png",
+        },
+        {
+          id: "comic-book",
+          name: "Comic Book",
+          imgUrl: "https://picsum.photos/150/150?random=10",
+        },
+        {
+          id: "watercolor",
+          name: "Watercolor",
+          imgUrl: "https://picsum.photos/150/150?random=12",
+        },
+        {
+          id: "neon-cyber",
+          name: "Neon Cyber",
+          imgUrl: "https://picsum.photos/150/150?random=14",
+        },
+        {
+          id: "vintage-poster",
+          name: "Vintage Poster",
+          imgUrl: "https://picsum.photos/150/150?random=16",
+        },
+        {
+          id: "kawaii",
+          name: "Kawaii",
+          imgUrl: "https://picsum.photos/150/150?random=18",
+        },
+        {
+          id: "steampunk",
+          name: "Steampunk",
+          imgUrl: "https://picsum.photos/150/150?random=20",
+        },
+      ];
+
+      const initialEmotions = [
+        { key: "Happy", name: "Happy", emoji: "😊" },
+        { key: "Sad", name: "Sad", emoji: "😢" },
+        { key: "Angry", name: "Angry", emoji: "😠" },
+        { key: "Surprised", name: "Surprised", emoji: "😲" },
+        { key: "Laughing", name: "Laughing", emoji: "😂" },
+        { key: "Love", name: "Love", emoji: "😍" },
+        { key: "Winking", name: "Winking", emoji: "😉" },
+        { key: "Confused", name: "Confused", emoji: "😕" },
+        { key: "Kiss", name: "Kiss", emoji: "😘" },
+        { key: "Serious", name: "Serious", emoji: "😐" },
+      ];
+
+      export default function App() {
+        const { useLiveQuery, database } = useFireproof("sticker-maker");
+        const [uploadedImage, setUploadedImage] = useState(null);
+        const [imagePreview, setImagePreview] = useState(null);
+        const [selectedStyle, setSelectedStyle] = useState("pop-art");
+        const [selectedExpressions, setSelectedExpressions] = useState(
+          new Set([
+            "Happy",
+            "Sad",
+            "Angry",
+            "Surprised",
+            "Laughing",
+            "Love",
+            "Winking",
+            "Confused",
+          ])
+        );
+        const [generatedStickers, setGeneratedStickers] = useState([]);
+        const [isLoading, setIsLoading] = useState(false);
+        const [loadingMessage, setLoadingMessage] = useState("");
+        const [error, setError] = useState(null);
+        const [isZipping, setIsZipping] = useState(false);
+        const [styleOptions, setStyleOptions] = useState([]);
+        const [stylesWithRotation, setStylesWithRotation] = useState([]);
+        const [allEmotions, setAllEmotions] = useState(initialEmotions);
+        const [showAddStyleModal, setShowAddStyleModal] = useState(false);
+        const [showAddExpressionModal, setShowAddExpressionModal] =
+          useState(false);
+        const styleContainerRef = useRef(null);
+        const videoRef = useRef(null);
+        const canvasRef = useRef(null);
+        const [showLeftArrow, setShowLeftArrow] = useState(false);
+        const [showRightArrow, setShowRightArrow] = useState(false);
+        const [isAndroid, setIsAndroid] = useState(false);
+        const [isIOS, setIsIOS] = useState(false);
+        const [isDesktop, setIsDesktop] = useState(false);
+        const [showCameraModal, setShowCameraModal] = useState(false);
+        const [stream, setStream] = useState(null);
+        const [copiedCaption, setCopiedCaption] = useState(null);
+
+        // Centralized error handler for consistent error handling
+        const handleError = useCallback((error, userMessage, context = "") => {
+          console.error(`Error in ${context}:`, error);
+          setError(userMessage);
+        }, []);
+
+        // Get all generated stickers from database
+        const { docs: stickerDocs } = useLiveQuery("type", { key: "sticker" });
+
+        // Get all custom styles from database
+        const { docs: customStyleDocs } = useLiveQuery("type", {
+          key: "custom-style",
+        });
+
+        // Get all custom expressions from database
+        const { docs: customExpressionDocs } = useLiveQuery("type", {
+          key: "custom-expression",
+        });
+
+        // Load custom styles from database and combine with initial styles
+        useEffect(() => {
+          const loadCustomStyles = async () => {
+            const customStyles = await Promise.all(
+              customStyleDocs.map(async (doc) => {
+                let imgUrl =
+                  "https://picsum.photos/150/150?random=" +
+                  Math.floor(Math.random() * 1000);
+
+                if (doc._files?.example) {
+                  try {
+                    const file = await doc._files.example.file();
+                    imgUrl = URL.createObjectURL(file);
+                  } catch (error) {
+                    handleError(
+                      error,
+                      "Failed to load custom style image",
+                      "loadCustomStyles"
+                    );
+                  }
+                }
+
+                return {
+                  id: doc.id,
+                  name: doc.name,
+                  description: doc.description,
+                  imgUrl: imgUrl,
+                  isCustom: true,
+                  docId: doc._id,
+                };
+              })
+            );
+
+            const allStyles = [...initialStyleOptions, ...customStyles];
+            setStyleOptions(allStyles);
+
+            const stylesWithRot = allStyles.map((style) => ({
+              ...style,
+              rotation: Math.random() * 12 - 6,
+            }));
+            setStylesWithRotation(stylesWithRot);
+          };
+
+          loadCustomStyles();
+        }, [customStyleDocs]);
+
+        // Load custom expressions from database and combine with initial expressions
+        useEffect(() => {
+          const customExpressions = customExpressionDocs.map((doc) => ({
+            key: doc.key,
+            name: doc.name,
+            emoji: doc.emoji,
+            isCustom: true,
+            docId: doc._id,
+          }));
+
+          const allExpressionsArray = [
+            ...initialEmotions,
+            ...customExpressions,
+          ];
+          setAllEmotions(allExpressionsArray);
+        }, [customExpressionDocs]);
+
+        const toggleExpression = useCallback((expressionKey) => {
+          setSelectedExpressions((prev) => {
+            const newSet = new Set(prev);
+            if (newSet.has(expressionKey)) {
+              newSet.delete(expressionKey);
+            } else {
+              newSet.add(expressionKey);
+            }
+            return newSet;
+          });
+        }, []);
+
+        const selectAllExpressions = useCallback(() => {
+          setSelectedExpressions(new Set(allEmotions.map((e) => e.key)));
+        }, [allEmotions]);
+
+        const clearAllExpressions = useCallback(() => {
+          setSelectedExpressions(new Set());
+        }, []);
+
+        const handleStyleSelect = useCallback((styleId) => {
+          setSelectedStyle(styleId);
+        }, []);
+
+        const handleAddCustomStyle = useCallback((newStyle) => {
+          setStyleOptions((prev) => [...prev, newStyle]);
+          setStylesWithRotation((prev) => [
+            ...prev,
+            { ...newStyle, rotation: Math.random() * 12 - 6 },
+          ]);
+        }, []);
+
+        const handleAddCustomExpression = useCallback((newExpression) => {
+          setAllEmotions((prev) => [...prev, newExpression]);
+        }, []);
+
+        const handleDeleteCustomStyle = useCallback(
+          async (styleId, docId) => {
+            try {
+              // Remove from database
+              await database.del(docId);
+
+              // Remove from local state
+              setStyleOptions((prev) =>
+                prev.filter((style) => style.id !== styleId)
+              );
+              setStylesWithRotation((prev) =>
+                prev.filter((style) => style.id !== styleId)
+              );
+
+              // If this was the selected style, reset to default
+              if (selectedStyle === styleId) {
+                setSelectedStyle("pop-art");
+              }
+            } catch (error) {
+              handleError(
+                error,
+                "Failed to delete style. Please try again.",
+                "deleteCustomStyle"
+              );
+            }
+          },
+          [database, selectedStyle, handleError]
+        );
+
+        const handleDeleteCustomExpression = useCallback(
+          async (expressionKey, docId) => {
+            try {
+              // Remove from database
+              await database.del(docId);
+
+              // Remove from local state
+              setAllEmotions((prev) =>
+                prev.filter((emotion) => emotion.key !== expressionKey)
+              );
+
+              // Remove from selected expressions if it was selected
+              setSelectedExpressions((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(expressionKey);
+                return newSet;
+              });
+            } catch (error) {
+              handleError(
+                error,
+                "Failed to delete expression. Please try again.",
+                "deleteCustomExpression"
+              );
+            }
+          },
+          [database, handleError]
+        );
+
+        useEffect(() => {
+          const userAgent = navigator.userAgent;
+          setIsAndroid(/android/i.test(userAgent));
+          setIsIOS(
+            (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) ||
+              (navigator.platform === "MacIntel" &&
+                navigator.maxTouchPoints > 1)
+          );
+
+          const isMobile =
+            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+              userAgent
+            );
+          if (!isMobile) {
+            setIsDesktop(true);
+          }
+
+          const jszipScript = document.createElement("script");
+          jszipScript.src =
+            "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+          jszipScript.async = true;
+          document.body.appendChild(jszipScript);
+
+          return () => {
+            document.body.removeChild(jszipScript);
+          };
+        }, []);
+
+        useEffect(() => {
+          if (stream && videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+        }, [stream]);
+
+        const checkScrollButtons = useCallback(() => {
+          const el = styleContainerRef.current;
+          if (el) {
+            const hasOverflow = el.scrollWidth > el.clientWidth;
+            setShowLeftArrow(hasOverflow && el.scrollLeft > 0);
+            setShowRightArrow(
+              hasOverflow && el.scrollLeft < el.scrollWidth - el.clientWidth - 1
+            );
+          }
+        }, []);
+
+        useEffect(() => {
+          const styleContainer = styleContainerRef.current;
+          if (!styleContainer) return;
+
+          const timer = setTimeout(() => checkScrollButtons(), 100);
+          styleContainer.addEventListener("scroll", checkScrollButtons);
+          window.addEventListener("resize", checkScrollButtons);
+
+          return () => {
+            clearTimeout(timer);
+            if (styleContainer) {
+              styleContainer.removeEventListener("scroll", checkScrollButtons);
+            }
+            window.removeEventListener("resize", checkScrollButtons);
+          };
+        }, [stylesWithRotation, checkScrollButtons]);
+
+        const handleScroll = useCallback((direction) => {
+          const el = styleContainerRef.current;
+          if (!el) return;
+
+          const items = Array.from(el.children[0].children);
+          if (items.length === 0) return;
+
+          const containerCenter = el.scrollLeft + el.clientWidth / 2;
+          let targetItem;
+
+          if (direction === "right") {
+            targetItem = items.find(
+              (item) =>
+                item.offsetLeft + item.offsetWidth / 2 > containerCenter + 1
+            );
+            if (!targetItem) targetItem = items[items.length - 1];
+          } else {
+            const candidates = items.filter(
+              (item) =>
+                item.offsetLeft + item.offsetWidth / 2 < containerCenter - 1
+            );
+            targetItem = candidates[candidates.length - 1];
+            if (!targetItem) targetItem = items[0];
+          }
+
+          if (targetItem) {
+            const targetScrollLeft =
+              targetItem.offsetLeft +
+              targetItem.offsetWidth / 2 -
+              el.clientWidth / 2;
+            el.scrollTo({ left: targetScrollLeft, behavior: "smooth" });
+          }
+        }, []);
+
+        const fileToBase64 = (file) =>
+          new Promise((resolve, reject) => {
+            if (!file) {
+              reject(new Error("No file provided"));
+              return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = () => {
+              try {
+                const base64Data = reader.result.split(",")[1];
+                resolve(base64Data);
+              } catch (error) {
+                reject(new Error("Failed to process file data"));
+              }
+            };
+            reader.onerror = () => reject(new Error("Failed to read file"));
+            reader.readAsDataURL(file);
+          });
+
+        const handleImageUpload = useCallback(
+          async (event) => {
+            const file = event.target.files[0];
+
+            if (!file) return;
+
+            if (!file.type.startsWith("image/")) {
+              setError("Please upload a valid image file.");
+              setUploadedImage(null);
+              setImagePreview(null);
+              return;
+            }
+
+            try {
+              const objectUrl = URL.createObjectURL(file);
+              setImagePreview(objectUrl);
+              const base64 = await fileToBase64(file);
+
+              setUploadedImage({
+                mimeType: file.type,
+                data: base64,
+                url: objectUrl,
+                file: file,
+              });
+              setGeneratedStickers([]);
+              setError(null);
+            } catch (error) {
+              handleError(
+                error,
+                "Failed to process uploaded image",
+                "handleImageUpload"
+              );
+              setUploadedImage(null);
+              setImagePreview(null);
+            }
+          },
+          [handleError]
+        );
+
+        const openCamera = useCallback(async () => {
+          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            try {
+              const newStream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 1280, height: 720, facingMode: "user" },
+              });
+              setStream(newStream);
+              setShowCameraModal(true);
+            } catch (err) {
+              handleError(
+                err,
+                "Could not access the camera. Please ensure it's enabled and not in use by another application.",
+                "startCamera"
+              );
+            }
+          }
+        }, [handleError]);
+
+        const closeCamera = useCallback(() => {
+          if (stream) {
+            stream.getTracks().forEach((track) => track.stop());
+          }
+          setStream(null);
+          setShowCameraModal(false);
+        }, [stream]);
+
+        const handleCapture = useCallback(() => {
+          const video = videoRef.current;
+          const canvas = canvasRef.current;
+          if (video && canvas) {
+            const context = canvas.getContext("2d");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+
+            canvas.toBlob((blob) => {
+              const file = new File([blob], "webcam-photo.png", {
+                type: "image/png",
+              });
+              const mockEvent = { target: { files: [file] } };
+              handleImageUpload(mockEvent);
+            }, "image/png");
+
+            closeCamera();
+          }
+        }, [handleImageUpload, closeCamera]);
+
+        const getStylePrompt = useCallback(
+          (style, emotion) => {
+            const baseInstruction =
+              "Create a digital sticker showing a person expressing";
+
+            // Check if it's a custom style
+            const customStyle = styleOptions.find(
+              (s) => s.id === style && s.isCustom
+            );
+            if (customStyle) {
+              return `${baseInstruction} ${emotion} in the following style: ${customStyle.description}. White background.`;
+            }
+
+            // Default style prompts
+            switch (style) {
+              case "pop-art":
+                return `${baseInstruction} ${emotion} in pop art style with bold colors, thick black outlines, and Ben-Day dot patterns. Clean white background.`;
+              case "claymation":
+                return `${baseInstruction} ${emotion} in claymation style - like a clay figure with soft, rounded features and matte textures. White background.`;
+              case "cartoon-dino":
+                return `${baseInstruction} ${emotion} as a cute cartoon dinosaur character with bright colors and simple shapes. White background.`;
+              case "pixel-art":
+                return `${baseInstruction} ${emotion} in retro 8-bit pixel art style with limited color palette and blocky pixels. White background.`;
+              case "royal":
+                return `${baseInstruction} ${emotion} as royal character (king/queen) with crown, royal clothing, and regal elements. White background.`;
+              case "football-sticker":
+                return `${baseInstruction} ${emotion} as a vintage 1970s soccer trading card style portrait with retro design elements. White background.`;
+              case "vintage-bollywood":
+                return `${baseInstruction} ${emotion} in 1960s Bollywood poster style with vibrant colors and dramatic styling. Colorful background ok.`;
+              case "japanese-matchbox":
+                return `${baseInstruction} ${emotion} in retro matchbox art style with simple lines and limited color palette. White background.`;
+              case "sticker-bomb":
+                return `${baseInstruction} ${emotion} in sticker bomb style - cartoon character surrounded by colorful graphic stickers and elements. White background.`;
+              case "comic-book":
+                return `${baseInstruction} ${emotion} in comic book style with bold halftone patterns, speech bubble effects, and dramatic poses. White background.`;
+              case "watercolor":
+                return `${baseInstruction} ${emotion} in soft watercolor painting style with flowing colors and artistic brush strokes. White background.`;
+              case "neon-cyber":
+                return `${baseInstruction} ${emotion} in cyberpunk style with neon colors, digital glitch effects, and futuristic elements. Dark background.`;
+              case "vintage-poster":
+                return `${baseInstruction} ${emotion} in vintage travel poster style with retro typography and classic illustration techniques. Colorful background.`;
+              case "kawaii":
+                return `${baseInstruction} ${emotion} in kawaii style with pastel colors, chibi proportions, and super cute features. White background.`;
+              case "steampunk":
+                return `${baseInstruction} ${emotion} in steampunk style with brass gears, Victorian clothing, and mechanical elements. White background.`;
+              default:
+                return `${baseInstruction} ${emotion} in ${style} style. White background.`;
+            }
+          },
+          [styleOptions]
+        );
+
+        const generateStickers = useCallback(async () => {
+          // Validation
+          if (!uploadedImage) {
+            setError("Please upload a profile picture first.");
+            return;
+          }
+
+          if (selectedExpressions.size === 0) {
+            setError("Please select at least one expression to generate.");
+            return;
+          }
+
+          // Initialize loading state
+          setIsLoading(true);
+          setError(null);
+
+          const selectedEmotions = allEmotions.filter((emotion) =>
+            selectedExpressions.has(emotion.key)
+          );
+          const initialStickers = selectedEmotions.map((emotion) => ({
+            emotion: emotion.key,
+            isLoading: true,
+            caption: null,
+            captionError: null,
+            isCaptionLoading: false,
+          }));
+
+          setGeneratedStickers(initialStickers);
+          setLoadingMessage("Generating stickers...");
+
+          try {
+            // Generate stickers only for selected expressions
+            const stickerPromises = selectedEmotions.map(
+              async ({ key: emotion }) => {
+                try {
+                  const prompt = getStylePrompt(selectedStyle, emotion);
+
+                  // Save a document for this sticker
+                  const stickerDoc = await database.put({
+                    type: "sticker",
+                    emotion: emotion,
+                    style: selectedStyle,
+                    prompt: prompt,
+                    _files: {
+                      original: uploadedImage.file,
+                    },
+                  });
+
+                  return {
+                    emotion,
+                    isLoading: false,
+                    docId: stickerDoc.id,
+                    caption: null,
+                    captionError: null,
+                    isCaptionLoading: false,
+                  };
+                } catch (err) {
+                  handleError(
+                    err,
+                    `Failed to generate sticker for ${emotion}`,
+                    "generateSticker"
+                  );
+                  return {
+                    emotion,
+                    isLoading: false,
+                    error: err.message,
+                    caption: null,
+                    captionError: null,
+                    isCaptionLoading: false,
+                  };
+                }
+              }
+            );
+
+            const results = await Promise.all(stickerPromises);
+            setGeneratedStickers(results);
+          } catch (err) {
+            handleError(
+              err,
+              "An error occurred during sticker generation",
+              "generateStickers"
+            );
+            setGeneratedStickers([]);
+          } finally {
+            setIsLoading(false);
+            setLoadingMessage("");
+          }
+        }, [
+          uploadedImage,
+          selectedExpressions,
+          allEmotions,
+          getStylePrompt,
+          database,
+          handleError,
+        ]);
+
+        const handleRegenerate = useCallback(
+          async (emotionToRegenerate) => {
+            if (!uploadedImage) return;
+            setGeneratedStickers((prev) =>
+              prev.map((s) =>
+                s.emotion === emotionToRegenerate
+                  ? { ...s, isLoading: true, docId: null }
+                  : s
+              )
+            );
+            setError(null);
+
+            try {
+              const prompt = getStylePrompt(selectedStyle, emotionToRegenerate);
+
+              // Save a new document for this sticker
+              const stickerDoc = await database.put({
+                type: "sticker",
+                emotion: emotionToRegenerate,
+                style: selectedStyle,
+                prompt: prompt,
+                _files: {
+                  original: uploadedImage.file,
+                },
+              });
+
+              setGeneratedStickers((prev) =>
+                prev.map((s) =>
+                  s.emotion === emotionToRegenerate
+                    ? {
+                        ...s,
+                        isLoading: false,
+                        docId: stickerDoc.id,
+                        error: null,
+                      }
+                    : s
+                )
+              );
+            } catch (err) {
+              handleError(
+                err,
+                `Failed to regenerate sticker for ${emotionToRegenerate}`,
+                "regenerateSticker"
+              );
+              setGeneratedStickers((prev) =>
+                prev.map((s) =>
+                  s.emotion === emotionToRegenerate
+                    ? {
+                        ...s,
+                        isLoading: false,
+                        error: err.message,
+                      }
+                    : s
+                )
+              );
+            }
+          },
+          [uploadedImage, getStylePrompt, database, handleError]
+        );
+
+        const handleGenerateCaption = useCallback(
+          async (emotionToCaption) => {
+            const styleName =
+              styleOptions.find((s) => s.id === selectedStyle)?.name ||
+              selectedStyle;
+
+            setGeneratedStickers((prev) =>
+              prev.map((s) =>
+                s.emotion === emotionToCaption
+                  ? {
+                      ...s,
+                      isCaptionLoading: true,
+                      caption: null,
+                      captionError: null,
+                    }
+                  : s
+              )
+            );
+
+            const prompt = `Generate a short, witty, one-line caption for a sticker. 
+      The sticker's style is "${styleName}" and it expresses the emotion of "${emotionToCaption}".
+      The caption should be suitable for a messaging app like WhatsApp or iMessage.
+      Be creative, concise, and funny.`;
+
+            try {
+              const caption = await callAI(prompt);
+              setGeneratedStickers((prev) =>
+                prev.map((s) =>
+                  s.emotion === emotionToCaption
+                    ? {
+                        ...s,
+                        isCaptionLoading: false,
+                        caption: caption.replace(/^"|"$/g, ""),
+                      }
+                    : s
+                )
+              );
+            } catch (err) {
+              handleError(err, "Failed to generate caption", "generateCaption");
+              setGeneratedStickers((prev) =>
+                prev.map((s) =>
+                  s.emotion === emotionToCaption
+                    ? {
+                        ...s,
+                        isCaptionLoading: false,
+                        captionError: "Failed to get caption.",
+                      }
+                    : s
+                )
+              );
+            }
+          },
+          [styleOptions, selectedStyle, handleError]
+        );
+
+        const handleCopyCaption = useCallback(
+          (caption, emotion) => {
+            const textArea = document.createElement("textarea");
+            textArea.value = caption;
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+              document.execCommand("copy");
+              setCopiedCaption(emotion);
+              setTimeout(() => setCopiedCaption(null), 2000);
+            } catch (err) {
+              handleError(err, "Failed to copy text", "copyToClipboard");
+            }
+            document.body.removeChild(textArea);
+          },
+          [handleError]
+        );
+
+        const handleDownloadAll = useCallback(async () => {
+          // Validation
+          if (typeof window.JSZip === "undefined") {
+            setError(
+              "Could not download all stickers. The required library is not available."
+            );
+            return;
+          }
+
+          const stickersToDownload = stickerDocs.filter(
+            (doc) => doc._files?.generated
+          );
+          if (stickersToDownload.length === 0) {
+            setError("No stickers available for download.");
+            return;
+          }
+
+          setIsZipping(true);
+          setError(null);
+
+          try {
+            const zip = new window.JSZip();
+            const stickerFolder = zip.folder("AI-Stickers");
+
+            // Process each sticker
+            for (const stickerDoc of stickersToDownload) {
+              if (stickerDoc._files?.generated) {
+                const file = await stickerDoc._files.generated.file();
+                const arrayBuffer = await file.arrayBuffer();
+                const fileName = `sticker-${stickerDoc.emotion
+                  .toLowerCase()
+                  .replace(/\s+/g, "-")}-${stickerDoc.style || "default"}.png`;
+                stickerFolder.file(fileName, arrayBuffer);
+              }
+            }
+
+            // Generate ZIP with compression
+            const zipBlob = await zip.generateAsync({
+              type: "blob",
+              compression: "DEFLATE",
+              compressionOptions: { level: 6 },
+            });
+
+            // Create download with timestamp
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const fileName = `AI-Stickers-${timestamp}.zip`;
+
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(zipBlob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+          } catch (err) {
+            handleError(
+              err,
+              "Sorry, there was an error creating the zip file.",
+              "downloadAll"
+            );
+          } finally {
+            setIsZipping(false);
+          }
+        }, [stickerDocs, handleError]);
+
+        return (
+          <div className="bg-gradient-to-br from-[#70d6ff] via-[#e9ff70] to-[#ffd670] min-h-screen p-4">
+            <div className="container mx-auto max-w-5xl w-full bg-[#ffffff] rounded-lg border-4 border-[#242424] shadow-xl p-6 overflow-hidden relative">
+              {/* Header */}
+              <header className="text-center mb-8">
+                <h1 className="text-4xl md:text-6xl font-bold text-[#242424] mb-2">
+                  AI Sticker Maker
+                </h1>
+                <p className="text-[#242424] text-lg italic">
+                  Turn any image into a custom sticker set
+                </p>
+              </header>
+
+              <div className="grid grid-cols-1 gap-8">
+                {/* Image Upload Section */}
+                <div className="bg-[#ff70a6] border-4 border-[#242424] rounded-lg p-6">
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <input
+                      id="camera-upload"
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleImageUpload}
+                    />
+                    <input
+                      id="image-upload"
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                    />
+
+                    {(isAndroid || isIOS) && (
+                      <label
+                        htmlFor="camera-upload"
+                        className="cursor-pointer bg-[#ffffff] border-4 border-[#242424] text-[#242424] font-bold py-3 px-6 rounded-lg hover:translate-x-1 hover:translate-y-1 transition-transform flex items-center justify-center"
+                      >
+                        <CameraIcon className="w-6 h-6 mr-3" />
+                        <span>
+                          {imagePreview ? "Retake Photo" : "Take Photo"}
+                        </span>
+                      </label>
+                    )}
+
+                    {isDesktop && (
+                      <button
+                        onClick={openCamera}
+                        className="bg-[#ffffff] border-4 border-[#242424] text-[#242424] font-bold py-3 px-6 rounded-lg hover:translate-x-1 hover:translate-y-1 transition-transform flex items-center justify-center"
+                      >
+                        <CameraIcon className="w-6 h-6 mr-3" />
+                        <span>
+                          {imagePreview ? "Retake with Camera" : "Use Camera"}
+                        </span>
+                      </button>
+                    )}
+
+                    <label
+                      htmlFor="image-upload"
+                      className="cursor-pointer bg-[#ffffff] border-4 border-[#242424] text-[#242424] font-bold py-3 px-6 rounded-lg hover:translate-x-1 hover:translate-y-1 transition-transform flex items-center justify-center"
+                    >
+                      <UploadCloud className="w-6 h-6 mr-3" />
+                      <span>
+                        {imagePreview ? "Change Photo" : "Upload Photo"}
+                      </span>
+                    </label>
+                  </div>
+
+                  {imagePreview && (
+                    <div className="mt-4 text-center">
+                      <img
+                        src={imagePreview}
+                        alt="Uploaded preview"
+                        className="h-32 w-32 object-cover rounded-lg shadow-lg mx-auto border-4 border-[#242424]"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Expression Selection */}
+                <div className="bg-[#ff9770] border-4 border-[#242424] rounded-lg p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-bold text-[#242424]">
+                      Choose expressions to generate ({selectedExpressions.size}
+                      )
+                    </h2>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={selectAllExpressions}
+                        className="bg-[#ffffff] text-[#242424] border-2 border-[#242424] font-bold py-2 px-4 rounded-lg hover:translate-x-1 hover:translate-y-1 transition-transform text-sm"
+                      >
+                        Select All
+                      </button>
+                      <button
+                        onClick={clearAllExpressions}
+                        className="bg-[#ffffff] text-[#242424] border-2 border-[#242424] font-bold py-2 px-4 rounded-lg hover:translate-x-1 hover:translate-y-1 transition-transform text-sm"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    {allEmotions.map((emotion) => (
+                      <div key={emotion.key} className="relative">
+                        <button
+                          onClick={() => toggleExpression(emotion.key)}
+                          className={`w-full p-3 border-4 border-[#242424] rounded-lg font-bold transition-transform hover:scale-105 ${
+                            selectedExpressions.has(emotion.key)
+                              ? "bg-[#70d6ff] text-[#242424]"
+                              : "bg-[#ffffff] text-[#242424]"
+                          }`}
+                        >
+                          <div className="text-2xl mb-1">{emotion.emoji}</div>
+                          <div className="text-sm">{emotion.name}</div>
+                          {emotion.isCustom && (
+                            <div className="text-xs italic opacity-70">
+                              Custom
+                            </div>
+                          )}
+                        </button>
+
+                        {/* Delete button for custom expressions */}
+                        {emotion.isCustom && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteCustomExpression(
+                                emotion.key,
+                                emotion.docId
+                              );
+                            }}
+                            className="absolute -top-2 -right-2 p-1 bg-[#ff70a6] border-2 border-[#242424] rounded-full text-[#242424] hover:translate-x-1 hover:translate-y-1 transition-transform"
+                            title="Delete custom expression"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+
+                    {/* Add Expression Card */}
+                    <button
+                      onClick={() => setShowAddExpressionModal(true)}
+                      className="p-3 border-4 border-[#242424] border-dashed rounded-lg bg-[#ffffff] opacity-70 hover:opacity-100 hover:scale-105 transition-all font-bold text-[#242424]"
+                    >
+                      <div className="text-2xl mb-1">
+                        <PlusIcon className="w-8 h-8 mx-auto" />
+                      </div>
+                      <div className="text-sm">Add Expression</div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Style Selection */}
+                <div className="bg-[#e9ff70] border-4 border-[#242424] rounded-lg p-6">
+                  <h2 className="text-2xl font-bold text-[#242424] mb-4 text-center">
+                    Choose a style
+                  </h2>
+                  <div className="relative">
+                    <button
+                      onClick={() => handleScroll("left")}
+                      className={`absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-[#ffffff] border-4 border-[#242424] rounded-full p-2 hover:translate-x-1 hover:translate-y-1 transition-transform ${
+                        showLeftArrow
+                          ? "opacity-100"
+                          : "opacity-0 pointer-events-none"
+                      }`}
+                    >
+                      <ChevronLeft className="w-6 h-6 text-[#242424]" />
+                    </button>
+
+                    <div
+                      ref={styleContainerRef}
+                      className="flex overflow-x-auto overflow-y-hidden scroll-smooth no-scrollbar h-[300px] items-center"
+                    >
+                      <div className="flex items-center px-4 gap-4">
+                        {stylesWithRotation.map((style) => (
+                          <div key={style.id} className="relative">
+                            <button
+                              onClick={() => handleStyleSelect(style.id)}
+                              className={`flex-shrink-0 p-4 border-4 border-[#242424] rounded-lg transition-all hover:scale-110 ${
+                                selectedStyle === style.id
+                                  ? "bg-[#70d6ff] scale-105 shadow-lg"
+                                  : "bg-[#ffffff]"
+                              }`}
+                              style={{
+                                transform: `rotate(${style.rotation}deg) ${
+                                  selectedStyle === style.id
+                                    ? "scale(1.05)"
+                                    : ""
+                                }`,
+                              }}
+                            >
+                              <div className="w-32">
+                                <img
+                                  className="w-32 h-32 object-contain"
+                                  src={style.imgUrl}
+                                  alt={style.name}
+                                />
+                                <p
+                                  className={`text-center text-[#242424] text-sm mt-2 ${
+                                    selectedStyle === style.id
+                                      ? "font-bold"
+                                      : ""
+                                  }`}
+                                >
+                                  {style.name}
+                                  {style.isCustom && (
+                                    <span className="text-xs block italic">
+                                      Custom
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+                            </button>
+
+                            {/* Delete button for custom styles */}
+                            {style.isCustom && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteCustomStyle(
+                                    style.id,
+                                    style.docId
+                                  );
+                                }}
+                                className="absolute -top-2 -right-2 p-1 bg-[#ff70a6] border-2 border-[#242424] rounded-full text-[#242424] hover:translate-x-1 hover:translate-y-1 transition-transform"
+                                title="Delete custom style"
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+
+                        {/* Add More Styles Card */}
+                        <button
+                          onClick={() => setShowAddStyleModal(true)}
+                          className="flex-shrink-0 p-4 border-4 border-[#242424] border-dashed rounded-lg bg-[#ffffff] opacity-70 hover:opacity-100 hover:scale-105 transition-all"
+                        >
+                          <div className="w-32 h-32 flex flex-col items-center justify-center">
+                            <PlusIcon className="w-12 h-12 text-[#242424] mb-2" />
+                            <p className="text-center text-[#242424] text-sm font-bold">
+                              Add Custom Style
+                            </p>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleScroll("right")}
+                      className={`absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-[#ffffff] border-4 border-[#242424] rounded-full p-2 hover:translate-x-1 hover:translate-y-1 transition-transform ${
+                        showRightArrow
+                          ? "opacity-100"
+                          : "opacity-0 pointer-events-none"
+                      }`}
+                    >
+                      <ChevronRight className="w-6 h-6 text-[#242424]" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Generate Button */}
+                <div className="text-center">
+                  <button
+                    onClick={generateStickers}
+                    disabled={
+                      !uploadedImage ||
+                      isLoading ||
+                      selectedExpressions.size === 0
+                    }
+                    className="bg-[#ff9770] text-[#242424] font-bold py-4 px-8 rounded-lg border-4 border-[#242424] text-xl hover:translate-x-1 hover:translate-y-1 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center mx-auto"
+                  >
+                    {isLoading ? (
+                      <>
+                        <LoaderCircle className="animate-spin w-6 h-6 mr-3" />
+                        {loadingMessage || "Generating..."}
+                      </>
+                    ) : (
+                      <>✨ Create Stickers ({selectedExpressions.size})</>
+                    )}
+                  </button>
+                </div>
+
+                {/* Stickers Display */}
+                <div className="bg-[#ffd670] border-4 border-[#242424] rounded-lg p-6 min-h-[400px]">
+                  {isLoading && (
+                    <div className="text-center text-[#242424]">
+                      <LoaderCircle className="w-16 h-16 animate-spin mx-auto mb-4" />
+                      <p className="text-xl font-bold">
+                        {loadingMessage || "Generating your stickers..."}
+                      </p>
+                      <p>This can take a moment. AI is working its magic!</p>
+                    </div>
+                  )}
+
+                  {error && (
+                    <div className="text-center text-[#242424] bg-[#ff70a6] border-4 border-[#242424] p-6 rounded-lg">
+                      <AlertTriangle className="w-16 h-16 mx-auto mb-4" />
+                      <p className="text-xl font-bold">An Error Occurred</p>
+                      <p className="mt-2">{error}</p>
+                    </div>
+                  )}
+
+                  {!isLoading && !error && generatedStickers.length > 0 && (
+                    <div className="w-full">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        {generatedStickers.map((sticker, index) => {
+                          const emotionObject = allEmotions.find(
+                            (e) => e.key === sticker.emotion
+                          );
+                          const emotionName = emotionObject
+                            ? emotionObject.name
+                            : sticker.emotion;
+
+                          return sticker.isLoading ? (
+                            <div
+                              key={index}
+                              className="text-center p-4 border-4 border-[#242424] rounded-lg flex flex-col items-center justify-center aspect-square bg-[#ffffff]"
+                            >
+                              <LoaderCircle className="w-8 h-8 text-[#242424] animate-spin mb-2" />
+                              <p className="text-sm font-bold text-[#242424]">
+                                Generating
+                              </p>
+                              <p className="text-xs text-[#242424]">
+                                {emotionName}
+                              </p>
+                            </div>
+                          ) : sticker.docId ? (
+                            <div
+                              key={index}
+                              className="text-center group relative"
+                            >
+                              <div className="bg-[#ffffff] rounded-lg border-4 border-[#242424] overflow-hidden shadow-sm">
+                                <ImgGen
+                                  _id={sticker.docId}
+                                  database={database}
+                                />
+                              </div>
+                              <div className="absolute top-2 right-2 flex gap-1">
+                                <button
+                                  onClick={() =>
+                                    handleRegenerate(sticker.emotion)
+                                  }
+                                  className="p-1 bg-[#ffffff] border-2 border-[#242424] rounded-full hover:translate-x-1 hover:translate-y-1 transition-transform"
+                                  title="Regenerate this sticker"
+                                >
+                                  <RefreshIcon className="w-4 h-4 text-[#242424]" />
+                                </button>
+                              </div>
+                              <p className="mt-2 text-sm font-bold text-[#242424]">
+                                {emotionName}
+                              </p>
+
+                              {/* Caption UI */}
+                              <div className="mt-2 min-h-[60px] px-2">
+                                {sticker.isCaptionLoading ? (
+                                  <div className="flex justify-center items-center h-full pt-2">
+                                    <LoaderCircle className="w-5 h-5 animate-spin text-[#242424]" />
+                                  </div>
+                                ) : sticker.captionError ? (
+                                  <div className="text-center text-xs text-[#242424]">
+                                    <p>{sticker.captionError}</p>
+                                    <button
+                                      onClick={() =>
+                                        handleGenerateCaption(sticker.emotion)
+                                      }
+                                      className="font-bold hover:underline"
+                                    >
+                                      Retry
+                                    </button>
+                                  </div>
+                                ) : sticker.caption ? (
+                                  <div className="relative p-2 bg-[#ffffff] border-2 border-[#242424] rounded-lg text-sm text-[#242424] break-words">
+                                    {sticker.caption}
+                                    <div className="absolute top-1 right-1">
+                                      <button
+                                        onClick={() =>
+                                          handleCopyCaption(
+                                            sticker.caption,
+                                            sticker.emotion
+                                          )
+                                        }
+                                        className="p-1 rounded-lg hover:bg-[#70d6ff] transition"
+                                        title="Copy"
+                                      >
+                                        {copiedCaption === sticker.emotion ? (
+                                          <span className="text-xs text-[#242424] font-bold px-1">
+                                            Copied!
+                                          </span>
+                                        ) : (
+                                          <CopyIcon className="w-4 h-4 text-[#242424]" />
+                                        )}
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() =>
+                                      handleGenerateCaption(sticker.emotion)
+                                    }
+                                    className="bg-[#70d6ff] text-[#242424] border-2 border-[#242424] hover:translate-x-1 hover:translate-y-1 transition-transform text-xs font-bold px-3 py-1.5 rounded-lg flex items-center justify-center mx-auto"
+                                  >
+                                    ✨ Suggest Caption
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div
+                              key={index}
+                              className="text-center p-4 border-4 border-[#242424] rounded-lg flex flex-col items-center justify-center aspect-square bg-[#ff70a6]"
+                            >
+                              <AlertTriangle className="w-8 h-8 text-[#242424] mb-2" />
+                              <p className="text-sm font-bold text-[#242424]">
+                                Failed
+                              </p>
+                              <p className="text-xs text-[#242424]">
+                                {emotionName}
+                              </p>
+                              <button
+                                onClick={() =>
+                                  handleRegenerate(sticker.emotion)
+                                }
+                                className="mt-2 px-3 py-1 bg-[#ffffff] text-[#242424] border-2 border-[#242424] text-xs font-bold rounded hover:translate-x-1 hover:translate-y-1 transition-transform"
+                              >
+                                Retry
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {stickerDocs.length > 0 && (
+                        <div className="mt-8 text-center">
+                          <button
+                            onClick={handleDownloadAll}
+                            disabled={isZipping}
+                            className="bg-[#ffffff] text-[#242424] border-4 border-[#242424] font-bold py-3 px-8 rounded-lg hover:translate-x-1 hover:translate-y-1 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center mx-auto"
+                          >
+                            {isZipping ? (
+                              <>
+                                <LoaderCircle className="animate-spin w-6 h-6 mr-3" />
+                                Zipping...
+                              </>
+                            ) : (
+                              <>
+                                <DownloadIcon className="w-6 h-6 mr-2" />
+                                Download all
+                              </>
+                            )}
+                          </button>
+                          {isIOS && (
+                            <div className="mt-4 p-3 bg-[#ffffff] border-2 border-[#242424] rounded-lg text-[#242424] max-w-md mx-auto">
+                              <p className="font-bold text-sm">
+                                <span className="text-[#70d6ff] mr-2">
+                                  Tip:
+                                </span>
+                                On an iOS device, you can tap and hold any
+                                sticker to save the image to your photos.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {!isLoading && !error && generatedStickers.length === 0 && (
+                    <div className="text-center text-[#242424]">
+                      <p className="text-xl font-bold">
+                        Your generated stickers will appear here.
+                      </p>
+                      <p className="italic">Follow the steps to get started!</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Generated Stickers List */}
+                {stickerDocs.length > 0 && (
+                  <div className="bg-[#70d6ff] border-4 border-[#242424] rounded-lg p-6">
+                    <h3 className="text-2xl font-bold text-[#242424] mb-4">
+                      Previously Generated Stickers
+                    </h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      {stickerDocs.map((doc) => (
+                        <div
+                          key={doc._id}
+                          className="bg-[#ffffff] border-4 border-[#242424] rounded-lg overflow-hidden"
+                        >
+                          <ImgGen _id={doc._id} database={database} />
+                          <div className="p-2">
+                            <p className="text-sm font-bold text-[#242424] text-center">
+                              {doc.emotion} - {doc.style}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <canvas ref={canvasRef} className="hidden"></canvas>
+
+              <CameraModal
+                show={showCameraModal}
+                onClose={closeCamera}
+                onCapture={handleCapture}
+                videoRef={videoRef}
+              />
+
+              <AddStyleModal
+                show={showAddStyleModal}
+                onClose={() => setShowAddStyleModal(false)}
+                onAddStyle={handleAddCustomStyle}
+                database={database}
+              />
+
+              <AddExpressionModal
+                show={showAddExpressionModal}
+                onClose={() => setShowAddExpressionModal(false)}
+                onAddExpression={handleAddCustomExpression}
+                database={database}
+              />
+            </div>
+          </div>
+        );
+      }
+      // prettier-ignore-end
+
+      const rootElement = document.getElementById("container");
+      ReactDOMClient.createRoot(rootElement).render(<App />);
+    </script>
+    <!--
+    Agents see LLMs docs:
+      Database: https://use-fireproof.com/llms-full.txt 
+      CallAI: https://use-fireproof.com/callai-llms.txt
+      ImgGen: https://use-fireproof.com/imggen-llms.txt
+    -->
+  </body>
+</html>
